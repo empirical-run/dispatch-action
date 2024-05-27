@@ -29246,11 +29246,13 @@ async function run() {
                 }
             })
         });
-        // TODO: test that errors are thrown
         const content = await response.text();
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        core.debug(`Response from worker: ${content}`);
-        // TODO: success queue log as response 
+        if (!response.ok) {
+            core.setFailed(`${content}`);
+        }
+        else {
+            console.log(`Dispatch request successful.`);
+        }
     }
     catch (error) {
         // Fail the workflow run if an error occurs
