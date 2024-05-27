@@ -9,8 +9,8 @@ export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url')
     const response = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
-			method: "POST",
-			body: JSON.stringify({
+      method: "POST",
+      body: JSON.stringify({
         repo: {
           owner: github.context.repo.owner,
           name: github.context.repo.repo
@@ -24,7 +24,7 @@ export async function run(): Promise<void> {
           }
         }
       })
-		});
+    });
     const content = await response.text();
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
