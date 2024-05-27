@@ -16,7 +16,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npx ncc build src/index.ts -o dist --source-map",
+    "build": "npx ncc build src/index.ts -o dist",
     "dev": "npm run build -- --watch"
   },
   "license": "MIT",

@@ -21,10 +21,7 @@ Supported inputs
 
 ```sh
 npm install
+npm run dev
 ```
 
-Before every commit, run the build to compile TS to JS.
-
-```sh
-npm run build
-```
+The `dist/index.js` file needs to be committed.

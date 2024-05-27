@@ -1,4 +1,4 @@
-require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
+/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 7351:
@@ -29231,26 +29231,26 @@ const github = __importStar(__nccwpck_require__(5438));
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
-        const response = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
+        const response = await fetch("https://dispatch.empirical.run", {
             method: "POST",
             body: JSON.stringify({
                 repo: {
                     owner: github.context.repo.owner,
                     name: github.context.repo.repo
                 },
-                to_forward: {
-                    event_type: "on-demand-test",
-                    client_payload: {
-                        build_url: buildUrl,
-                        "unit": false,
-                        "integration": true
-                    }
+                event_type: "on-demand-test",
+                client_payload: {
+                    build_url: buildUrl,
+                    "unit": false,
+                    "integration": true
                 }
             })
         });
+        // TODO: test that errors are thrown
         const content = await response.text();
         // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
         core.debug(`Response from worker: ${content}`);
+        // TODO: success queue log as response 
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -31169,4 +31169,3 @@ const main_1 = __nccwpck_require__(399);
 module.exports = __webpack_exports__;
 /******/ })()
 ;
-//# sourceMappingURL=index.js.map
