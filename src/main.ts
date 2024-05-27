@@ -1,5 +1,6 @@
-import * as core from '@actions/core'
-import { wait } from './wait'
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { wait } from './wait';
 
 /**
  * The main function for the action.
@@ -8,6 +9,10 @@ import { wait } from './wait'
 export async function run(): Promise<void> {
   try {
     const ms: string = core.getInput('milliseconds')
+
+    const payload = JSON.stringify(github.context.payload, undefined, 2);
+    console.log(`The event payload: ${payload}`);
+    console.log(`Repo: ${github.context.repo.owner} / ${github.context.repo.repo} `)
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
     core.debug(`Waiting ${ms} milliseconds ...`)
