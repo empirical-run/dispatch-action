@@ -1,6 +1,15 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { wait } from './wait';
+const URL = require("url").URL;
+
+const isValidUrl = (s: string) => {
+  try {
+    new URL(s);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
 
 /**
  * The main function for the action.
@@ -8,27 +17,34 @@ import { wait } from './wait';
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const buildUrl: string = core.getInput('build-url');
+    if (!buildUrl) {
+      core.setFailed(`Missing config parameter: build-url.`)
+    } else if (!isValidUrl(buildUrl)) {
+      core.setFailed(`Invalid config: build-url must be a valid URL.`)
+    }
 
-    const payload = JSON.stringify(github.context.payload, undefined, 2);
-    console.log(`The event payload: ${payload}`);
-    console.log(`Repo: ${github.context.repo.owner} / ${github.context.repo.repo} `)
-
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
-
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const response = await fetch("https://dispatch.empirical.run", {
+      method: "POST",
+      body: JSON.stringify({
+        repo: {
+          owner: github.context.repo.owner,
+          name: github.context.repo.repo
+        },
+        event_type: "run-tests",
+        client_payload: {
+          build_url: buildUrl,
+        }
+      })
+    });
+    const content = await response.text();
+    if (!response.ok) {
+      core.setFailed(`${content}`);
+    } else {
+      console.log(`Dispatch request successful.`);
+    }
   } catch (error) {
     // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) core.setFailed(error.message);
   }
 }
-
-//
-// { event_type: "on-demand-test", client_payload: { "unit": false, "integration": true } }
