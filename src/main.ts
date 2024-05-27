@@ -8,8 +8,6 @@ import * as github from '@actions/github';
 export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url')
-
-    // const payload = JSON.stringify(github.context.payload, undefined, 2);
     const response = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
 			method: "POST",
 			body: JSON.stringify({
