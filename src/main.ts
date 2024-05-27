@@ -11,7 +11,7 @@ export async function run(): Promise<void> {
     const ms: string = core.getInput('milliseconds')
 
     const payload = JSON.stringify(github.context.payload, undefined, 2);
-    console.log(`The event payload: ${payload}`);
+    // console.log(`The event payload: ${payload}`);
 
     const rawResponse = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
 			method: "POST",
