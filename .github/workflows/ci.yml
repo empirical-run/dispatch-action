@@ -24,6 +24,8 @@ jobs:
       - name: Test Local Action
         id: test-action
         uses: ./
+        with:
+          build-url: test
 
       - name: Print Output
         id: output

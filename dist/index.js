@@ -29224,6 +29224,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const URL = (__nccwpck_require__(7310).URL);
+const isValidUrl = (s) => {
+    try {
+        new URL(s);
+        return true;
+    }
+    catch (err) {
+        return false;
+    }
+};
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -29233,6 +29243,9 @@ async function run() {
         const buildUrl = core.getInput('build-url');
         if (!buildUrl) {
             core.setFailed(`Missing config parameter: build-url.`);
+        }
+        else if (!isValidUrl(buildUrl)) {
+            core.setFailed(`Invalid config: build-url must be a valid URL.`);
         }
         const response = await fetch("https://dispatch.empirical.run", {
             method: "POST",

@@ -1,5 +1,15 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+const URL = require("url").URL;
+
+const isValidUrl = (s: string) => {
+  try {
+    new URL(s);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
 
 /**
  * The main function for the action.
@@ -10,6 +20,8 @@ export async function run(): Promise<void> {
     const buildUrl: string = core.getInput('build-url');
     if (!buildUrl) {
       core.setFailed(`Missing config parameter: build-url.`)
+    } else if (!isValidUrl(buildUrl)) {
+      core.setFailed(`Invalid config: build-url must be a valid URL.`)
     }
 
     const response = await fetch("https://dispatch.empirical.run", {
