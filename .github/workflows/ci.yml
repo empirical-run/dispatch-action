@@ -24,8 +24,6 @@ jobs:
       - name: Test Local Action
         id: test-action
         uses: ./
-        with:
-          build-url: "https://github.com/empirical-run/dispatch-action"
 
       - name: Print Output
         id: output

@@ -29235,7 +29235,7 @@ async function run() {
             method: "POST",
             body: JSON.stringify({
                 repo: {
-                    // owner: github.context.repo.owner,
+                    owner: github.context.repo.owner,
                     name: github.context.repo.repo
                 },
                 event_type: "on-demand-test",
