@@ -31,11 +31,9 @@ export async function run(): Promise<void> {
           owner: github.context.repo.owner,
           name: github.context.repo.repo
         },
-        event_type: "on-demand-test",
+        event_type: "run-tests",
         client_payload: {
           build_url: buildUrl,
-          "unit": false,
-          "integration": true
         }
       })
     });

@@ -17,6 +17,8 @@ Supported inputs
 - [x] build-url: **Required** input, with url to the application build
 - [ ] slack-channel: Slack channel for reporting results
 
+> Note that this Action only supports whitelisted GitHub organizations. To get access, contact us.
+
 ## Development
 
 ```sh

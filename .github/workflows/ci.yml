@@ -25,8 +25,4 @@ jobs:
         id: test-action
         uses: ./
         with:
-          build-url: test
-
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+          build-url: "https://github.com/empirical-run/dispatch-action"
