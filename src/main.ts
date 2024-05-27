@@ -12,7 +12,18 @@ export async function run(): Promise<void> {
 
     const payload = JSON.stringify(github.context.payload, undefined, 2);
     console.log(`The event payload: ${payload}`);
-    console.log(`Repo: ${github.context.repo.owner} / ${github.context.repo.repo} `)
+
+    const rawResponse = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
+			method: "POST",
+			body: JSON.stringify({
+        repo: {
+          owner: github.context.repo.owner,
+          name: github.context.repo.repo
+        },
+        event_type: "on-demand-test",
+        client_payload: { "unit": false, "integration": true }
+      })
+		});
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
     core.debug(`Waiting ${ms} milliseconds ...`)
@@ -29,6 +40,3 @@ export async function run(): Promise<void> {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
-
-//
-// { event_type: "on-demand-test", client_payload: { "unit": false, "integration": true } }
