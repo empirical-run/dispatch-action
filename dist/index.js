@@ -29231,6 +29231,9 @@ const github = __importStar(__nccwpck_require__(5438));
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
+        if (!buildUrl) {
+            core.setFailed(`Missing config parameter: build-url.`);
+        }
         const response = await fetch("https://dispatch.empirical.run", {
             method: "POST",
             body: JSON.stringify({

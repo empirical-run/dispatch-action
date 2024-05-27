@@ -7,7 +7,11 @@ import * as github from '@actions/github';
  */
 export async function run(): Promise<void> {
   try {
-    const buildUrl: string = core.getInput('build-url')
+    const buildUrl: string = core.getInput('build-url');
+    if (!buildUrl) {
+      core.setFailed(`Missing config parameter: build-url.`)
+    }
+
     const response = await fetch("https://dispatch.empirical.run", {
       method: "POST",
       body: JSON.stringify({
