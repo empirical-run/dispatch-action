@@ -7,8 +7,10 @@ import * as github from '@actions/github';
  */
 export async function run(): Promise<void> {
   try {
+    const buildUrl: string = core.getInput('build-url')
+
     // const payload = JSON.stringify(github.context.payload, undefined, 2);
-    const rawResponse = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
+    const response = await fetch("https://dispatch-worker.saikatmitra91.workers.dev", {
 			method: "POST",
 			body: JSON.stringify({
         repo: {
@@ -16,20 +18,17 @@ export async function run(): Promise<void> {
           name: github.context.repo.repo
         },
         event_type: "on-demand-test",
-        client_payload: { "unit": false, "integration": true }
+        client_payload: {
+          build_url: buildUrl,
+          "unit": false,
+          "integration": true
+        }
       })
 		});
+    const content = await response.text();
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    // core.debug(`Waiting ${ms} milliseconds ...`)
-
-    // Log the current timestamp, wait, then log the new timestamp
-    // core.debug(new Date().toTimeString())
-    // await wait(parseInt(ms, 10))
-    // core.debug(new Date().toTimeString())
-
-    // Set outputs for other workflow steps to use
-    // core.setOutput('time', new Date().toTimeString())
+    core.debug(`Response from worker: ${content}`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

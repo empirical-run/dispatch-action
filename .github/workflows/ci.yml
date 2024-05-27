@@ -25,7 +25,7 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          build-url: "https://github.com/empirical-run/dispatch-action"
 
       - name: Print Output
         id: output
