@@ -26,14 +26,14 @@ Configure the `slack-webhook-url` input to get alerts like this.
 
 <img width="517" alt="Slack alerts" src="https://github.com/empirical-run/dispatch-action/assets/284612/32ec902a-c8d0-48d6-afe3-447e0aaec049">
 
-#### Steps
+#### Configuration steps
 
-1. Use [this link](https://api.slack.com/apps?new_app=1) to go to your Slack apps dashboard, and create a new app
-2. Select "From scratch" in the "Create an app" dialog
-3. Define an app name, say "Test alerts", and your workspace. Once submitted, your app is created
-4. In the app settings, click on "Incoming webhooks" in the sidebar
-5. Click on "Add new webhook to workspace" and choose the channel to send alerts to
-6. Copy the webhook URL and set it as `slack-webhook-url` in your GitHub Actions YML
+- Use [this link](https://api.slack.com/apps?new_app=1) to go to your Slack apps dashboard, and create a new app
+- Select "From scratch" in the "Create an app" dialog
+- Define an app name, say "Test alerts", and your workspace. Once submitted, your app is created
+- In the app settings, click on "Incoming webhooks" in the sidebar
+- Click on "Add new webhook to workspace" and choose the channel to send alerts to
+- Copy the webhook URL and set it as `slack-webhook-url` in your GitHub Actions YML
 
 ## Development
 
