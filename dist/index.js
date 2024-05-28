@@ -29247,6 +29247,16 @@ async function run() {
         else if (!isValidUrl(buildUrl)) {
             core.setFailed(`Invalid config: build-url must be a valid URL.`);
         }
+        const slackWebhookUrl = core.getInput('slack-webhook-url');
+        if (slackWebhookUrl && !isValidUrl(slackWebhookUrl)) {
+            core.setFailed(`Invalid config: slack-webhook-url must be a valid URL.`);
+        }
+        const clientPayload = {
+            build_url: buildUrl
+        };
+        if (slackWebhookUrl) {
+            clientPayload.slack_webhook_url = slackWebhookUrl;
+        }
         const response = await fetch("https://dispatch.empirical.run", {
             method: "POST",
             body: JSON.stringify({
@@ -29255,9 +29265,7 @@ async function run() {
                     name: github.context.repo.repo
                 },
                 event_type: "run-tests",
-                client_payload: {
-                    build_url: buildUrl,
-                }
+                client_payload: clientPayload
             })
         });
         const content = await response.text();
