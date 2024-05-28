@@ -24,7 +24,7 @@ export async function run(): Promise<void> {
       core.setFailed(`Invalid config: build-url must be a valid URL.`)
     }
     const slackWebhookUrl: string = core.getInput('slack-webhook-url');
-    if (!isValidUrl(slackWebhookUrl)) {
+    if (slackWebhookUrl && !isValidUrl(slackWebhookUrl)) {
       core.setFailed(`Invalid config: slack-webhook-url must be a valid URL.`)
     }
 
