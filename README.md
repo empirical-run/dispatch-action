@@ -28,6 +28,9 @@ Configure the `slack-webhook-url` input to get alerts like this.
 
 #### Configuration steps
 
+In the following steps, we will create a new incoming webhook for your Slack workspace. For more verbose
+steps, follow the [official Slack guide](https://api.slack.com/messaging/webhooks).
+
 - Use [this link](https://api.slack.com/apps?new_app=1) to go to your Slack apps dashboard, and create a new app
 - Select "From scratch" in the "Create an app" dialog
 - Define an app name, say "Test alerts", and your workspace. Once submitted, your app is created
