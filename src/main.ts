@@ -11,6 +11,23 @@ const isValidUrl = (s: string) => {
   }
 };
 
+const isValidPlatform = (s: string) => {
+  return ["web", "ios", "android"].includes(s);
+}
+
+const eventType = (platform: string) => {
+  switch (platform) {
+    case "web":
+      return "run-tests";
+    case "android": 
+      return "run-tests-android";
+    case "ios": 
+      return "run-tests-ios";
+    default:
+      return "run-tests";
+  }
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -27,6 +44,10 @@ export async function run(): Promise<void> {
     if (slackWebhookUrl && !isValidUrl(slackWebhookUrl)) {
       core.setFailed(`Invalid config: slack-webhook-url must be a valid URL.`)
     }
+    const platform: string = core.getInput('platform');
+    if (platform && !isValidPlatform(platform)) {
+      core.setFailed(`Invalid config: platform must be one of web, android or ios.`)
+    }
 
     const clientPayload: any = {
       build_url: buildUrl
@@ -42,7 +63,7 @@ export async function run(): Promise<void> {
           owner: github.context.repo.owner,
           name: github.context.repo.repo
         },
-        event_type: "run-tests",
+        event_type: eventType(platform),
         client_payload: clientPayload
       })
     });

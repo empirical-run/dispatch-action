@@ -12,10 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  test-action:
-    name: GitHub Actions Test
+  test-web-default:
+    name: Test action for web
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         id: checkout
@@ -26,3 +25,18 @@ jobs:
         uses: ./
         with:
           build-url: "https://github.com/empirical-run/dispatch-action"
+
+  test-android:
+    name: Test action for mobile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Local Action
+        id: test-action
+        uses: ./
+        with:
+          build-url: "https://github.com/empirical-run/dispatch-action"
+          platform: android
