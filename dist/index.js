@@ -29245,6 +29245,8 @@ const eventType = (platform) => {
             return "run-tests-android";
         case "ios":
             return "run-tests-ios";
+        default:
+            return "run-tests";
     }
 };
 /**
