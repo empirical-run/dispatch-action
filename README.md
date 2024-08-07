@@ -16,7 +16,9 @@
 ```
 
 Supported inputs
-- [x] build-url: **Required** input, for the URl of the application build
+- [x] build-url: **Required** input, for the URL of the application build
+   - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
+   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
 - [x] slack-webhook-url: **Optional** input, for a Slack incoming webhook URL; [learn more](#get-slack-alerts)
 - [x] platform: **Optional** input, to specify one of the supported platforms: `web`, `android`, or `ios`. Default is `web`
 
