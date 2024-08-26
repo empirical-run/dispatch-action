@@ -34,9 +34,8 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
-        id: test-action
-        uses: ./
+      - name: Run tests on new build
+        uses: empirical-run/dispatch-action@main
         with:
-          build-url: "https://github.com/empirical-run/dispatch-action"
-          platform: android
+          build-url: ${{ steps.prev-step.outputs.url }}
+          platform: web
