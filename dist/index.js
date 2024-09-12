@@ -29253,6 +29253,12 @@ function getBranchName() {
     // ref is fully-formed (e.g. refs/heads/<branch_name>)
     return github.context.ref.replace("refs/heads/", "");
 }
+function getCommitUrl() {
+    const commitSha = getCommitSha();
+    const owner = github.context.repo.owner;
+    const name = github.context.repo.repo;
+    return `https://github.com/${owner}/${name}/commit/${commitSha}`;
+}
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
@@ -29281,6 +29287,7 @@ async function run() {
                     url: buildUrl,
                     commit: getCommitSha(),
                     branch: getBranchName(),
+                    commit_url: getCommitUrl()
                 },
                 platform,
             })
