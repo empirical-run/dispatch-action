@@ -15,17 +15,22 @@ const isValidPlatform = (s: string) => {
   return ["web", "ios", "android"].includes(s);
 }
 
-function getBranchName(): string {
-  // TODO: should we support `release` eventName 
+function getCommitSha(): string {
   if (github.context.eventName === 'pull_request') {
-    // ref is refs/pull/<pr_number>/merge
-    // so we pick the `head_ref` from the payload
-    console.log(github.context.payload.pull_request!.head);
-  } else if (github.context.eventName === 'push') {
-    // ref is refs/heads/<branch_name>
-    return github.context.ref.replace("refs/heads/", "");
+    // github.context.sha will give sha for the merged commit
+    return github.context.payload.pull_request!.head.sha;
   }
-  return github.context.ref;
+  return github.context.sha;
+}
+
+function getBranchName(): string {
+  if (github.context.eventName === 'pull_request') {
+    // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
+    // so we pick the ref of the `head` from the pull request object
+    return github.context.payload.pull_request!.head.ref;
+  }
+  // ref is fully-formed (e.g. refs/heads/<branch_name>)
+  return github.context.ref.replace("refs/heads/", "");
 }
 
 export async function run(): Promise<void> {
@@ -54,7 +59,7 @@ export async function run(): Promise<void> {
         },
         build: {
           url: buildUrl,
-          commit: github.context.sha,
+          commit: getCommitSha(),
           branch: getBranchName(),
         },
         platform,
