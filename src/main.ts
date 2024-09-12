@@ -16,7 +16,15 @@ const isValidPlatform = (s: string) => {
 }
 
 function getBranchName(): string {
-  console.log(github.context);
+  // TODO: should we support `release` eventName 
+  if (github.context.eventName === 'pull_request') {
+    // ref is refs/pull/<pr_number>/merge
+    // so we pick the `head_ref` from the payload
+    console.log(github.context.payload.pull_request!.head);
+  } else if (github.context.eventName === 'push') {
+    // ref is refs/heads/<branch_name>
+    return github.context.ref.replace("refs/heads/", "");
+  }
   return github.context.ref;
 }
 
