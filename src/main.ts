@@ -15,6 +15,11 @@ const isValidPlatform = (s: string) => {
   return ["web", "ios", "android"].includes(s);
 }
 
+function getBranchName(): string {
+  console.log(github.context);
+  return github.context.ref;
+}
+
 export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url');
@@ -42,7 +47,7 @@ export async function run(): Promise<void> {
         build: {
           url: buildUrl,
           commit: github.context.sha,
-          branch: github.context.ref,
+          branch: getBranchName(),
         },
         platform,
       })

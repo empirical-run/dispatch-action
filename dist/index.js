@@ -29237,6 +29237,10 @@ const isValidUrl = (s) => {
 const isValidPlatform = (s) => {
     return ["web", "ios", "android"].includes(s);
 };
+function getBranchName() {
+    console.log(github.context);
+    return github.context.ref;
+}
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
@@ -29264,7 +29268,7 @@ async function run() {
                 build: {
                     url: buildUrl,
                     commit: github.context.sha,
-                    branch: github.context.ref,
+                    branch: getBranchName(),
                 },
                 platform,
             })
