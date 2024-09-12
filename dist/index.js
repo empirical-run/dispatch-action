@@ -29237,22 +29237,22 @@ const isValidUrl = (s) => {
 const isValidPlatform = (s) => {
     return ["web", "ios", "android"].includes(s);
 };
-const eventType = (platform) => {
-    switch (platform) {
-        case "web":
-            return "run-tests";
-        case "android":
-            return "run-tests-android";
-        case "ios":
-            return "run-tests-ios";
-        default:
-            return "run-tests";
+function getCommitSha() {
+    if (github.context.eventName === 'pull_request') {
+        // github.context.sha will give sha for the merged commit
+        return github.context.payload.pull_request.head.sha;
     }
-};
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
+    return github.context.sha;
+}
+function getBranchName() {
+    if (github.context.eventName === 'pull_request') {
+        // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
+        // so we pick the ref of the `head` from the pull request object
+        return github.context.payload.pull_request.head.ref;
+    }
+    // ref is fully-formed (e.g. refs/heads/<branch_name>)
+    return github.context.ref.replace("refs/heads/", "");
+}
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
@@ -29263,28 +29263,26 @@ async function run() {
             core.setFailed(`Invalid config: build-url must be a valid URL.`);
         }
         const slackWebhookUrl = core.getInput('slack-webhook-url');
-        if (slackWebhookUrl && !isValidUrl(slackWebhookUrl)) {
-            core.setFailed(`Invalid config: slack-webhook-url must be a valid URL.`);
+        if (slackWebhookUrl) {
+            console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`);
         }
         const platform = core.getInput('platform');
         if (platform && !isValidPlatform(platform)) {
             core.setFailed(`Invalid config: platform must be one of web, android or ios.`);
         }
-        const clientPayload = {
-            build_url: buildUrl
-        };
-        if (slackWebhookUrl) {
-            clientPayload.slack_webhook_url = slackWebhookUrl;
-        }
-        const response = await fetch("https://dispatch.empirical.run", {
+        const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
             method: "POST",
             body: JSON.stringify({
-                repo: {
+                origin: {
                     owner: github.context.repo.owner,
                     name: github.context.repo.repo
                 },
-                event_type: eventType(platform),
-                client_payload: clientPayload
+                build: {
+                    url: buildUrl,
+                    commit: getCommitSha(),
+                    branch: getBranchName(),
+                },
+                platform,
             })
         });
         const content = await response.text();
@@ -31200,9 +31198,6 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * The entrypoint for the action.
- */
 const main_1 = __nccwpck_require__(399);
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (0, main_1.run)();
