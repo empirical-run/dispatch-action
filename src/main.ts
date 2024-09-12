@@ -33,6 +33,13 @@ function getBranchName(): string {
   return github.context.ref.replace("refs/heads/", "");
 }
 
+function getCommitUrl(): string {
+  const commitSha = getCommitSha();
+  const owner = github.context.repo.owner;
+  const name = github.context.repo.repo;
+  return `https://github.com/${owner}/${name}/commit/${commitSha}`;
+}
+
 export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url');
@@ -61,6 +68,7 @@ export async function run(): Promise<void> {
           url: buildUrl,
           commit: getCommitSha(),
           branch: getBranchName(),
+          commit_url: getCommitUrl()
         },
         platform,
       })
