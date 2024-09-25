@@ -29276,6 +29276,7 @@ async function run() {
         if (platform && !isValidPlatform(platform)) {
             core.setFailed(`Invalid config: platform must be one of web, android or ios.`);
         }
+        const environment = core.getInput('environment');
         const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
             method: "POST",
             body: JSON.stringify({
@@ -29290,6 +29291,7 @@ async function run() {
                     commit_url: getCommitUrl()
                 },
                 platform,
+                environment,
             })
         });
         const content = await response.text();
