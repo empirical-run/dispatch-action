@@ -25,7 +25,7 @@ jobs:
         uses: ./
         with:
           build-url: "https://github.com/empirical-run/dispatch-action"
-          environment: prod
+          environment: staging
 
   test-android:
     name: Test action for mobile
