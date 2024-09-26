@@ -53,8 +53,13 @@ export async function run(): Promise<void> {
       console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`)
     }
     const platform: string = core.getInput('platform');
-    if (platform && !isValidPlatform(platform)) {
-      core.setFailed(`Invalid config: platform must be one of web, android or ios.`)
+    if (platform) {
+      console.warn(`Warning: platform is a deprecated input, you should use environment instead.`)
+    }
+
+    const environment = core.getInput('environment');
+    if (!platform && !environment) {
+      core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`)
     }
 
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
@@ -71,6 +76,7 @@ export async function run(): Promise<void> {
           commit_url: getCommitUrl()
         },
         platform,
+        environment,
       })
     });
     const content = await response.text();
