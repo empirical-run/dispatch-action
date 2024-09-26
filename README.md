@@ -10,15 +10,16 @@
 - name: Dispatch for tests
   uses: empirical-run/dispatch-action@main
   with:
+    environment: production # or staging or mobile
     build-url: ${{ steps.prev-step.outputs.url }}
-    platform: web  # or android, ios
 ```
 
 Supported inputs
+
+- [x] environment: **Required** input, to specify which environment to run the tests against. Configure environments by contacting us.
 - [x] build-url: **Required** input, for the URL of the application build
-   - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
-   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
-- [x] platform: **Optional** input, to specify one of the supported platforms: `web`, `android`, or `ios`. Default is `web`
+  - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
+  - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
 
 > Note that this Action only supports whitelisted GitHub organizations. To get access, contact us.
 
