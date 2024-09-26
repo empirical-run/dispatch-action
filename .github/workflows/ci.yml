@@ -25,4 +25,4 @@ jobs:
         uses: ./
         with:
           build-url: "https://github.com/empirical-run/dispatch-action"
-          environment: staging
+          environment: production
