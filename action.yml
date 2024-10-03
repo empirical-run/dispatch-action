@@ -12,16 +12,9 @@ inputs:
   build-url:
     description: "URL to the application to be tested"
     required: true
-  slack-webhook-url:
-    description: "Incoming webhook URL for Slack or Google Chat"
-    required: false
-  platform:
-    description: "One of the supported platforms: web, android or ios"
-    required: false
-    default: "web"
   environment:
     description: "Environment to run the tests on"
-    required: false
+    required: true
 
 runs:
   using: node20
