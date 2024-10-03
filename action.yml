@@ -1,24 +1,20 @@
-name: 'Run Empirical tests'
-description: 'This action dispatches a request to run tests'
-author: 'empirical.run'
+name: "Run Empirical tests"
+description: "This action dispatches a request to run tests"
+author: "empirical.run"
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: 'send'
-  color: 'gray-dark'
+  icon: "send"
+  color: "gray-dark"
 
 # Define your inputs here.
 inputs:
   build-url:
-    description: 'URL to the application to be tested'
+    description: "URL to the application to be tested"
     required: true
-  slack-webhook-url:
-    description: 'Incoming webhook URL for Slack or Google Chat'
-    required: false
-  platform:
-    description: 'One of the supported platforms: web, android or ios'
-    required: false
-    default: 'web'
+  environment:
+    description: "Environment to run the tests on"
+    required: true
 
 runs:
   using: node20
