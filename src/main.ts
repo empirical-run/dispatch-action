@@ -19,6 +19,8 @@ function getCommitSha(): string {
   if (github.context.eventName === 'pull_request') {
     // github.context.sha will give sha for the merged commit
     return github.context.payload.pull_request!.head.sha;
+  } else if (github.context.eventName.includes("deployment")) { 
+    // TODO
   }
   return github.context.sha;
 }
