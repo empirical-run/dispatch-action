@@ -29250,8 +29250,23 @@ function getBranchName() {
         // so we pick the ref of the `head` from the pull request object
         return github.context.payload.pull_request.head.ref;
     }
-    // ref is fully-formed (e.g. refs/heads/<branch_name>)
-    return github.context.ref.replace("refs/heads/", "");
+    if (github.context.eventName === 'deployment_status' ||
+        github.context.eventName === 'deployment') {
+        return github.context.payload.deployment.ref;
+    }
+    // For push events
+    if (github.context.ref) {
+        // ref is fully-formed (e.g. refs/heads/<branch_name>)
+        if (github.context.ref.startsWith('refs/heads/')) {
+            return github.context.ref.replace('refs/heads/', '');
+        }
+        // Handle other ref formats if needed
+        if (github.context.ref.startsWith('refs/tags/')) {
+            return github.context.ref.replace('refs/tags/', '');
+        }
+    }
+    console.log(`No branch info found for event: ${github.context.eventName}`);
+    return "";
 }
 function getCommitUrl() {
     const commitSha = getCommitSha();
