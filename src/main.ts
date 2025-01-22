@@ -21,12 +21,14 @@ function getCommitSha(): string {
 
 async function getBranchForCommit(commitSha: string): Promise<string | undefined> {
   try {
+    console.log("Fetching branch for commit:", commitSha);
     const octokit = github.getOctokit(process.env.GITHUB_TOKEN!);
     const { data: branches } = await octokit.rest.repos.listBranchesForHeadCommit({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       commit_sha: commitSha,
     });
+    console.log("Related branches for commit:", branches);
     if (branches.length === 0) {
       console.error('No related branches found for commit:', commitSha);
       return undefined;
@@ -40,12 +42,12 @@ async function getBranchForCommit(commitSha: string): Promise<string | undefined
 }
 
 async function getBranchName(): Promise<string | undefined> {
+  console.log("Get branch name for event", github.context.eventName);
   if (github.context.eventName === 'pull_request') {
     // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
     // so we pick the ref of the `head` from the pull request object
     return github.context.payload.pull_request!.head.ref;
   }
-
   if (
     github.context.eventName === 'deployment_status' ||
     github.context.eventName === 'deployment'
@@ -53,6 +55,7 @@ async function getBranchName(): Promise<string | undefined> {
     const sha = github.context.payload.deployment!.sha;
     const ref = github.context.payload.deployment!.ref;
     if (sha === ref) {
+      console.log("Deployment event with sha and ref as same value:", sha);
       // Vercel deployments have the sha and ref as the same value, both 
       // contain the commit sha. We want to get the branch name instead.
       // We don't want to send the `ref` as branch name in this case.
@@ -112,6 +115,8 @@ export async function run(): Promise<void> {
       core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`)
     }
 
+    const branch = await getBranchName();
+    console.log(`Branch name: ${branch}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
       body: JSON.stringify({
@@ -122,7 +127,7 @@ export async function run(): Promise<void> {
         build: {
           url: buildUrl,
           commit: getCommitSha(),
-          branch: (await getBranchName()),
+          branch,
           commit_url: getCommitUrl()
         },
         platform,
