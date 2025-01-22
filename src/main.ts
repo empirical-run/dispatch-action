@@ -11,10 +11,6 @@ const isValidUrl = (s: string) => {
   }
 };
 
-const isValidPlatform = (s: string) => {
-  return ["web", "ios", "android"].includes(s);
-}
-
 function getCommitSha(): string {
   if (github.context.eventName === 'pull_request') {
     // github.context.sha will give sha for the merged commit
@@ -23,18 +19,55 @@ function getCommitSha(): string {
   return github.context.sha;
 }
 
-function getBranchName(): string {
+async function getBranchForCommit(commitSha: string): Promise<string | undefined> {
+  try {
+    console.log("Fetching branch for commit:", commitSha);
+    const octokit = github.getOctokit(process.env.GITHUB_TOKEN!);
+    const { data: branches } = await octokit.rest.repos.listBranchesForHeadCommit({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      commit_sha: commitSha,
+    });
+    console.log("Related branches for commit:", branches);
+    if (branches.length === 0) {
+      console.error('No related branches found for commit:', commitSha);
+      return undefined;
+    }
+    // Return the first branch that contains this commit
+    return branches[0].name;
+  } catch (error) {
+    console.error('Error fetching branch:', error);
+  }
+  return undefined;
+}
+
+async function getBranchName(): Promise<string | undefined> {
+  console.log("Get branch name for event", github.context.eventName);
   if (github.context.eventName === 'pull_request') {
     // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
     // so we pick the ref of the `head` from the pull request object
     return github.context.payload.pull_request!.head.ref;
   }
-
   if (
     github.context.eventName === 'deployment_status' ||
     github.context.eventName === 'deployment'
   ) {
-    return github.context.payload.deployment!.ref;
+    const sha = github.context.payload.deployment!.sha;
+    const ref = github.context.payload.deployment!.ref;
+    if (sha === ref) {
+      console.log("Deployment event with sha and ref as same value:", sha);
+      // Vercel deployments have the sha and ref as the same value, both 
+      // contain the commit sha. We want to get the branch name instead.
+      // We don't want to send the `ref` as branch name in this case.
+      let branchName = undefined;
+      if (process.env.GITHUB_TOKEN) {
+        // If GITHUB_TOKEN is available, we will get the branch name via Octokit.
+        branchName = getBranchForCommit(sha);
+      }
+      return branchName;
+    } else {
+      return ref;
+    }
   }
 
   // For push events
@@ -82,6 +115,8 @@ export async function run(): Promise<void> {
       core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`)
     }
 
+    const branch = await getBranchName();
+    console.log(`Branch name: ${branch}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
       body: JSON.stringify({
@@ -92,7 +127,7 @@ export async function run(): Promise<void> {
         build: {
           url: buildUrl,
           commit: getCommitSha(),
-          branch: getBranchName(),
+          branch,
           commit_url: getCommitUrl()
         },
         platform,

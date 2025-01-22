@@ -23,6 +23,22 @@ Supported inputs
 
 > Note that this Action only supports whitelisted GitHub organizations. To get access, contact us.
 
+### Vercel deployments
+
+If you are dispatching test run requests for Vercel deployments, it is a good idea to add the GITHUB_TOKEN
+environment variable to pull branch info.
+
+
+```yml
+- name: Dispatch for tests
+  uses: empirical-run/dispatch-action@main
+  with:
+    environment: production # or staging or mobile
+    build-url: ${{ steps.prev-step.outputs.url }}
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
 ## Development
 
 ```sh
