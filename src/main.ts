@@ -93,6 +93,62 @@ function getCommitUrl(): string {
   return `https://github.com/${owner}/${name}/commit/${commitSha}`;
 }
 
+async function getAuthor(): Promise<string> {
+  console.log("Getting author for event:", github.context.eventName);
+  
+  switch (github.context.eventName) {
+    case 'push':
+      // For push events, the author is in event.commits[0].author.username or .name
+      if (github.context.payload.commits && github.context.payload.commits.length > 0) {
+        return github.context.payload.commits[0].author.username || 
+               github.context.payload.commits[0].author.name || 
+               github.context.actor;
+      }
+      break;
+      
+    case 'pull_request':
+      // For PR events, we can get the author from the PR object
+      if (github.context.payload.pull_request) {
+        return github.context.payload.pull_request.user.login || github.context.actor;
+      }
+      break;
+      
+    case 'deployment':
+    case 'deployment_status':
+      // For deployment events, get the author of the commit using Octokit
+      if (github.context.payload.deployment && github.context.payload.deployment.sha) {
+        try {
+          const commitSha = github.context.payload.deployment.sha;
+          console.log("Fetching author for deployment commit:", commitSha);
+          
+          // Check if GITHUB_TOKEN is available
+          if (process.env.GITHUB_TOKEN) {
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            
+            const { data: commitData } = await octokit.rest.repos.getCommit({
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              ref: commitSha
+            });
+            
+            if (commitData && commitData.author) {
+              console.log("Found author for deployment commit:", commitData.author.login);
+              return commitData.author.login || github.context.actor;
+            }
+          } else {
+            console.log("GITHUB_TOKEN not available, cannot fetch commit author");
+          }
+        } catch (error) {
+          console.error("Error fetching commit author:", error);
+        }
+      }
+      break;
+  }
+  
+  // Default fallback to the actor who triggered the workflow
+  return github.context.actor;
+}
+
 export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url');
@@ -117,6 +173,8 @@ export async function run(): Promise<void> {
 
     const branch = await getBranchName();
     console.log(`Branch name: ${branch}`);
+    const author = await getAuthor();
+    console.log(`Author: ${author}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
       body: JSON.stringify({
@@ -128,7 +186,7 @@ export async function run(): Promise<void> {
           url: buildUrl,
           commit: getCommitSha(),
           branch,
-          commit_url: getCommitUrl()
+          commit_url: getCommitUrl(),
         },
         platform,
         environment,
