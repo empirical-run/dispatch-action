@@ -93,7 +93,7 @@ function getCommitUrl(): string {
   return `https://github.com/${owner}/${name}/commit/${commitSha}`;
 }
 
-async function getAuthor(): Promise<string> {
+async function getActor(): Promise<string> {
   console.log("Getting author for event:", github.context.eventName);
   
   switch (github.context.eventName) {
@@ -146,7 +146,8 @@ async function getAuthor(): Promise<string> {
   }
   
   // Default fallback to the actor who triggered the workflow
-  return github.context.actor;
+  // https://github.com/actions/toolkit/issues/1143#issuecomment-2193348740
+  return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
 }
 
 export async function run(): Promise<void> {
@@ -173,8 +174,6 @@ export async function run(): Promise<void> {
 
     const branch = await getBranchName();
     console.log(`Branch name: ${branch}`);
-    const author = await getAuthor();
-    console.log(`Author: ${author}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
       body: JSON.stringify({
@@ -190,6 +189,7 @@ export async function run(): Promise<void> {
         },
         platform,
         environment,
+        github_actor: await getActor(),
       })
     });
     const content = await response.text();
