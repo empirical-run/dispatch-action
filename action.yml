@@ -9,6 +9,9 @@ branding:
 
 # Define your inputs here.
 inputs:
+  auth-key:
+    description: "Auth key for the application"
+    required: false
   build-url:
     description: "URL to the application to be tested"
     required: true

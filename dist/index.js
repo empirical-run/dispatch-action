@@ -29387,6 +29387,7 @@ async function run() {
             'Content-Type': 'application/json'
         };
         if (authKey) {
+            console.log(`Setting an auth header for the request.`);
             headers['Authorization'] = `Bearer ${authKey}`;
         }
         const branch = await getBranchName();

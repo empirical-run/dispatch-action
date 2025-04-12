@@ -177,6 +177,7 @@ export async function run(): Promise<void> {
       'Content-Type': 'application/json'
     };
     if (authKey) {
+      console.log(`Setting an auth header for the request.`);
       headers['Authorization'] = `Bearer ${authKey}`;
     }
 
