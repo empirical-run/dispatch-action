@@ -172,10 +172,19 @@ export async function run(): Promise<void> {
       core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`)
     }
 
+    const authKey = core.getInput('auth-key');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    if (authKey) {
+      headers['Authorization'] = `Bearer ${authKey}`;
+    }
+
     const branch = await getBranchName();
     console.log(`Branch name: ${branch}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
+      headers,
       body: JSON.stringify({
         origin: {
           owner: github.context.repo.owner,
