@@ -10,24 +10,23 @@
 - name: Dispatch for tests
   uses: empirical-run/dispatch-action@main
   with:
+    auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
     environment: production # or staging or mobile
     build-url: ${{ steps.prev-step.outputs.url }}
 ```
 
 Supported inputs
 
+- [x] auth-key: **Required** input, for authentication.
 - [x] environment: **Required** input, to specify which environment to run the tests against. Configure environments by contacting us.
 - [x] build-url: **Required** input, for the URL of the application build
   - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
 
-> Note that this Action only supports whitelisted GitHub organizations. To get access, contact us.
-
 ### Vercel deployments
 
 If you are dispatching test run requests for Vercel deployments, it is a good idea to add the GITHUB_TOKEN
 environment variable to pull branch info.
-
 
 ```yml
 - name: Dispatch for tests
