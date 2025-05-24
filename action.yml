@@ -2,7 +2,6 @@ name: "Run Empirical tests"
 description: "This action dispatches a request to run tests"
 author: "empirical.run"
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: "send"
   color: "gray-dark"
@@ -10,13 +9,13 @@ branding:
 # Define your inputs here.
 inputs:
   auth-key:
-    description: "Auth key for the application"
-    required: false
-  build-url:
-    description: "URL to the application to be tested"
+    description: "API key for Empirical"
     required: true
   environment:
     description: "Environment to run the tests on"
+    required: true
+  build-url:
+    description: "URL to the application to be tested"
     required: true
   runtime-config:
     description: "Runtime config for the tests"
