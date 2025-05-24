@@ -29361,6 +29361,30 @@ async function getActor() {
     // https://github.com/actions/toolkit/issues/1143#issuecomment-2193348740
     return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
 }
+function parseRuntimeConfig(runtimeConfig) {
+    return runtimeConfig.reduce((acc, line) => {
+        if (!line.trim()) {
+            return acc;
+        }
+        if (!line.includes(':')) {
+            throw new Error(`Invalid runtime config format. Each line must contain a key-value pair separated by colon. Invalid line: "${line}"`);
+        }
+        const [key, value] = line.split(':');
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+        if (!trimmedKey) {
+            throw new Error(`Invalid runtime config: key cannot be empty in line "${line}"`);
+        }
+        if (!trimmedValue) {
+            throw new Error(`Invalid runtime config: value cannot be empty for key "${trimmedKey}"`);
+        }
+        if (acc[trimmedKey]) {
+            throw new Error(`Invalid runtime config: duplicate key "${trimmedKey}" found`);
+        }
+        acc[trimmedKey] = trimmedValue;
+        return acc;
+    }, {});
+}
 async function run() {
     try {
         const buildUrl = core.getInput('build-url');
@@ -29370,10 +29394,7 @@ async function run() {
         else if (!isValidUrl(buildUrl)) {
             core.setFailed(`Invalid config: build-url must be a valid URL.`);
         }
-        const slackWebhookUrl = core.getInput('slack-webhook-url');
-        if (slackWebhookUrl) {
-            console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`);
-        }
+        // TOOD: Remove platform and only keep environment
         const platform = core.getInput('platform');
         if (platform) {
             console.warn(`Warning: platform is a deprecated input, you should use environment instead.`);
@@ -29383,12 +29404,19 @@ async function run() {
             core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`);
         }
         const authKey = core.getInput('auth-key');
+        if (!authKey) {
+            core.setFailed(`Missing config parameter: auth-key`);
+        }
         const headers = {
             'Content-Type': 'application/json'
         };
         if (authKey) {
-            console.log(`Setting an auth header for the request.`);
             headers['Authorization'] = `Bearer ${authKey}`;
+        }
+        const runtimeConfig = core.getMultilineInput('runtime-config');
+        if (runtimeConfig) {
+            const config = parseRuntimeConfig(runtimeConfig);
+            console.log(`Runtime config: ${JSON.stringify(config)}`);
         }
         const branch = await getBranchName();
         console.log(`Branch name: ${branch}`);
@@ -29407,7 +29435,7 @@ async function run() {
                     commit_url: getCommitUrl(),
                 },
                 platform,
-                environment,
+                environment: environment.toLowerCase(),
                 github_actor: await getActor(),
             })
         });
