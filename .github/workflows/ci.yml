@@ -30,3 +30,4 @@ jobs:
           runtime-config: |
             foo: bar
             baz: qux
+            eventName: ${{ github.event_name }}
