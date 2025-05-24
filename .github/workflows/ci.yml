@@ -26,6 +26,6 @@ jobs:
         with:
           build-url: "https://github.com/empirical-run/dispatch-action"
           environment: production
-          runtime-config:
+          runtime-config: |
             foo: bar
             baz: qux
