@@ -150,6 +150,31 @@ async function getActor(): Promise<string> {
   return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
 }
 
+function parseRuntimeConfig(runtimeConfig: string[]): Record<string, string> {
+  return runtimeConfig.reduce((acc: Record<string, string>, line: string) => {
+    if (!line.trim()) {
+      return acc;
+    }
+    if (!line.includes(':')) {
+      throw new Error(`Invalid runtime config format. Each line must contain a key-value pair separated by colon. Invalid line: "${line}"`);
+    }
+    const [key, value] = line.split(':');
+    const trimmedKey = key.trim();
+    const trimmedValue = value.trim();
+    if (!trimmedKey) {
+      throw new Error(`Invalid runtime config: key cannot be empty in line "${line}"`);
+    }
+    if (!trimmedValue) {
+      throw new Error(`Invalid runtime config: value cannot be empty for key "${trimmedKey}"`);
+    }
+    if (acc[trimmedKey]) {
+      throw new Error(`Invalid runtime config: duplicate key "${trimmedKey}" found`);
+    }
+    acc[trimmedKey] = trimmedValue;
+    return acc;
+  }, {});
+}
+
 export async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput('build-url');
@@ -182,10 +207,7 @@ export async function run(): Promise<void> {
 
     const runtimeConfig = core.getMultilineInput('runtime-config');
     if (runtimeConfig) {
-      const config = runtimeConfig.map((line: string) => {
-        const [key, value] = line.split(':');
-        return { [key.trim()]: value.trim() };
-      });
+      const config = parseRuntimeConfig(runtimeConfig);
       console.log(`Runtime config: ${JSON.stringify(config)}`);
     }
 
