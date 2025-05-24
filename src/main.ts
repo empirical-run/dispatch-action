@@ -158,26 +158,25 @@ export async function run(): Promise<void> {
     } else if (!isValidUrl(buildUrl)) {
       core.setFailed(`Invalid config: build-url must be a valid URL.`)
     }
-    const slackWebhookUrl: string = core.getInput('slack-webhook-url');
-    if (slackWebhookUrl) {
-      console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`)
-    }
+
+    // TOOD: Remove platform and only keep environment
     const platform: string = core.getInput('platform');
     if (platform) {
       console.warn(`Warning: platform is a deprecated input, you should use environment instead.`)
     }
-
     const environment = core.getInput('environment');
     if (!platform && !environment) {
       core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`)
     }
 
     const authKey = core.getInput('auth-key');
+    if (!authKey) {
+      core.setFailed(`Missing config parameter: auth-key`)
+    }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
     if (authKey) {
-      console.log(`Setting an auth header for the request.`);
       headers['Authorization'] = `Bearer ${authKey}`;
     }
 
@@ -198,7 +197,7 @@ export async function run(): Promise<void> {
           commit_url: getCommitUrl(),
         },
         platform,
-        environment,
+        environment: environment.toLowerCase(),
         github_actor: await getActor(),
       })
     });
