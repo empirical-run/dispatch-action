@@ -25,6 +25,7 @@ jobs:
         uses: ./
         with:
           build-url: "https://github.com/empirical-run/dispatch-action"
+          auth-key: "1234567890"
           environment: production
           runtime-config: |
             foo: bar

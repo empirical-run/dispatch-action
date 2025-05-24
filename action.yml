@@ -18,6 +18,9 @@ inputs:
   environment:
     description: "Environment to run the tests on"
     required: true
+  runtime-config:
+    description: "Runtime config for the tests"
+    required: false
 
 runs:
   using: node20
