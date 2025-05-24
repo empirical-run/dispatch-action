@@ -29407,7 +29407,7 @@ async function run() {
                     commit_url: getCommitUrl(),
                 },
                 platform,
-                environment,
+                environment: environment.toLowerCase(),
                 github_actor: await getActor(),
             })
         });
