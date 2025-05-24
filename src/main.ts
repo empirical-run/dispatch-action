@@ -180,6 +180,15 @@ export async function run(): Promise<void> {
       headers['Authorization'] = `Bearer ${authKey}`;
     }
 
+    const runtimeConfig = core.getMultilineInput('runtime-config');
+    if (runtimeConfig) {
+      const config = runtimeConfig.map((line: string) => {
+        const [key, value] = line.split(':');
+        return { [key.trim()]: value.trim() };
+      });
+      console.log(`Runtime config: ${JSON.stringify(config)}`);
+    }
+
     const branch = await getBranchName();
     console.log(`Branch name: ${branch}`);
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
