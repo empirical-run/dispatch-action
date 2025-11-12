@@ -29192,6 +29192,106 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 6144:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const main_1 = __nccwpck_require__(399);
+(async function run() {
+    try {
+        const buildUrl = core.getInput("build-url");
+        if (!buildUrl) {
+            core.setFailed(`Missing config parameter: build-url.`);
+        }
+        else if (!(0, main_1.isValidUrl)(buildUrl)) {
+            core.setFailed(`Invalid config: build-url must be a valid URL.`);
+        }
+        const slackWebhookUrl = core.getInput("slack-webhook-url");
+        if (slackWebhookUrl) {
+            console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`);
+        }
+        const platform = core.getInput("platform");
+        if (platform) {
+            console.warn(`Warning: platform is a deprecated input, you should use environment instead.`);
+        }
+        const environment = core.getInput("environment");
+        if (!platform && !environment) {
+            core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`);
+        }
+        const authKey = core.getInput("auth-key");
+        const headers = {
+            "Content-Type": "application/json",
+        };
+        if (authKey) {
+            console.log(`Setting an auth header for the request.`);
+            headers["Authorization"] = `Bearer ${authKey}`;
+        }
+        const branch = await (0, main_1.getBranchName)();
+        console.log(`Branch name: ${branch}`);
+        const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                origin: {
+                    owner: github.context.repo.owner,
+                    name: github.context.repo.repo,
+                },
+                build: {
+                    url: buildUrl,
+                    commit: (0, main_1.getCommitSha)(),
+                    branch,
+                    commit_url: (0, main_1.getCommitUrl)(),
+                },
+                platform,
+                environment: environment.toLowerCase(),
+                github_actor: await (0, main_1.getActor)(),
+            }),
+        });
+        const content = await response.text();
+        if (!response.ok) {
+            core.setFailed(`${content}`);
+        }
+        else {
+            console.log(`Dispatch request successful.`);
+        }
+    }
+    catch (error) {
+        // Fail the workflow run if an error occurs
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
+})();
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -29221,8 +29321,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+exports.getActor = exports.getCommitUrl = exports.getBranchName = exports.getCommitSha = exports.isValidUrl = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const URL = (__nccwpck_require__(7310).URL);
 const isValidUrl = (s) => {
@@ -29234,6 +29333,7 @@ const isValidUrl = (s) => {
         return false;
     }
 };
+exports.isValidUrl = isValidUrl;
 function getCommitSha() {
     if (github.context.eventName === 'pull_request') {
         // github.context.sha will give sha for the merged commit
@@ -29241,6 +29341,7 @@ function getCommitSha() {
     }
     return github.context.sha;
 }
+exports.getCommitSha = getCommitSha;
 async function getBranchForCommit(commitSha) {
     try {
         console.log("Fetching branch for commit:", commitSha);
@@ -29304,12 +29405,14 @@ async function getBranchName() {
     console.log(`No branch info found for event: ${github.context.eventName}`);
     return "";
 }
+exports.getBranchName = getBranchName;
 function getCommitUrl() {
     const commitSha = getCommitSha();
     const owner = github.context.repo.owner;
     const name = github.context.repo.repo;
     return `https://github.com/${owner}/${name}/commit/${commitSha}`;
 }
+exports.getCommitUrl = getCommitUrl;
 async function getActor() {
     console.log("Getting author for event:", github.context.eventName);
     switch (github.context.eventName) {
@@ -29361,71 +29464,7 @@ async function getActor() {
     // https://github.com/actions/toolkit/issues/1143#issuecomment-2193348740
     return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
 }
-async function run() {
-    try {
-        const buildUrl = core.getInput('build-url');
-        if (!buildUrl) {
-            core.setFailed(`Missing config parameter: build-url.`);
-        }
-        else if (!isValidUrl(buildUrl)) {
-            core.setFailed(`Invalid config: build-url must be a valid URL.`);
-        }
-        const slackWebhookUrl = core.getInput('slack-webhook-url');
-        if (slackWebhookUrl) {
-            console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`);
-        }
-        const platform = core.getInput('platform');
-        if (platform) {
-            console.warn(`Warning: platform is a deprecated input, you should use environment instead.`);
-        }
-        const environment = core.getInput('environment');
-        if (!platform && !environment) {
-            core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`);
-        }
-        const authKey = core.getInput('auth-key');
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        if (authKey) {
-            console.log(`Setting an auth header for the request.`);
-            headers['Authorization'] = `Bearer ${authKey}`;
-        }
-        const branch = await getBranchName();
-        console.log(`Branch name: ${branch}`);
-        const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-                origin: {
-                    owner: github.context.repo.owner,
-                    name: github.context.repo.repo
-                },
-                build: {
-                    url: buildUrl,
-                    commit: getCommitSha(),
-                    branch,
-                    commit_url: getCommitUrl(),
-                },
-                platform,
-                environment: environment.toLowerCase(),
-                github_actor: await getActor(),
-            })
-        });
-        const content = await response.text();
-        if (!response.ok) {
-            core.setFailed(`${content}`);
-        }
-        else {
-            console.log(`Dispatch request successful.`);
-        }
-    }
-    catch (error) {
-        // Fail the workflow run if an error occurs
-        if (error instanceof Error)
-            core.setFailed(error.message);
-    }
-}
-exports.run = run;
+exports.getActor = getActor;
 
 
 /***/ }),
@@ -31317,19 +31356,12 @@ module.exports = parseParams
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-(0, main_1.run)();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
