@@ -1,6 +1,12 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { getActor, getBranchName, getCommitSha, getCommitUrl, isValidUrl } from "./main";
+import {
+  getActor,
+  getBranchName,
+  getCommitSha,
+  getCommitUrl,
+  isValidUrl,
+} from "./main";
 
 (async function run(): Promise<void> {
   try {

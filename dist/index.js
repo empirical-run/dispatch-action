@@ -29335,7 +29335,7 @@ const isValidUrl = (s) => {
 };
 exports.isValidUrl = isValidUrl;
 function getCommitSha() {
-    if (github.context.eventName === 'pull_request') {
+    if (github.context.eventName === "pull_request") {
         // github.context.sha will give sha for the merged commit
         return github.context.payload.pull_request.head.sha;
     }
@@ -29353,31 +29353,31 @@ async function getBranchForCommit(commitSha) {
         });
         console.log("Related branches for commit:", branches);
         if (branches.length === 0) {
-            console.error('No related branches found for commit:', commitSha);
+            console.error("No related branches found for commit:", commitSha);
             return undefined;
         }
         // Return the first branch that contains this commit
         return branches[0].name;
     }
     catch (error) {
-        console.error('Error fetching branch:', error);
+        console.error("Error fetching branch:", error);
     }
     return undefined;
 }
 async function getBranchName() {
     console.log("Get branch name for event", github.context.eventName);
-    if (github.context.eventName === 'pull_request') {
+    if (github.context.eventName === "pull_request") {
         // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
         // so we pick the ref of the `head` from the pull request object
         return github.context.payload.pull_request.head.ref;
     }
-    if (github.context.eventName === 'deployment_status' ||
-        github.context.eventName === 'deployment') {
+    if (github.context.eventName === "deployment_status" ||
+        github.context.eventName === "deployment") {
         const sha = github.context.payload.deployment.sha;
         const ref = github.context.payload.deployment.ref;
         if (sha === ref) {
             console.log("Deployment event with sha and ref as same value:", sha);
-            // Vercel deployments have the sha and ref as the same value, both 
+            // Vercel deployments have the sha and ref as the same value, both
             // contain the commit sha. We want to get the branch name instead.
             // We don't want to send the `ref` as branch name in this case.
             let branchName = undefined;
@@ -29394,12 +29394,12 @@ async function getBranchName() {
     // For push events
     if (github.context.ref) {
         // ref is fully-formed (e.g. refs/heads/<branch_name>)
-        if (github.context.ref.startsWith('refs/heads/')) {
-            return github.context.ref.replace('refs/heads/', '');
+        if (github.context.ref.startsWith("refs/heads/")) {
+            return github.context.ref.replace("refs/heads/", "");
         }
         // Handle other ref formats if needed
-        if (github.context.ref.startsWith('refs/tags/')) {
-            return github.context.ref.replace('refs/tags/', '');
+        if (github.context.ref.startsWith("refs/tags/")) {
+            return github.context.ref.replace("refs/tags/", "");
         }
     }
     console.log(`No branch info found for event: ${github.context.eventName}`);
@@ -29416,24 +29416,26 @@ exports.getCommitUrl = getCommitUrl;
 async function getActor() {
     console.log("Getting author for event:", github.context.eventName);
     switch (github.context.eventName) {
-        case 'push':
+        case "push":
             // For push events, the author is in event.commits[0].author.username or .name
-            if (github.context.payload.commits && github.context.payload.commits.length > 0) {
-                return github.context.payload.commits[0].author.username ||
+            if (github.context.payload.commits &&
+                github.context.payload.commits.length > 0) {
+                return (github.context.payload.commits[0].author.username ||
                     github.context.payload.commits[0].author.name ||
-                    github.context.actor;
+                    github.context.actor);
             }
             break;
-        case 'pull_request':
+        case "pull_request":
             // For PR events, we can get the author from the PR object
             if (github.context.payload.pull_request) {
-                return github.context.payload.pull_request.user.login || github.context.actor;
+                return (github.context.payload.pull_request.user.login || github.context.actor);
             }
             break;
-        case 'deployment':
-        case 'deployment_status':
+        case "deployment":
+        case "deployment_status":
             // For deployment events, get the author of the commit using Octokit
-            if (github.context.payload.deployment && github.context.payload.deployment.sha) {
+            if (github.context.payload.deployment &&
+                github.context.payload.deployment.sha) {
                 try {
                     const commitSha = github.context.payload.deployment.sha;
                     console.log("Fetching author for deployment commit:", commitSha);
@@ -29443,7 +29445,7 @@ async function getActor() {
                         const { data: commitData } = await octokit.rest.repos.getCommit({
                             owner: github.context.repo.owner,
                             repo: github.context.repo.repo,
-                            ref: commitSha
+                            ref: commitSha,
                         });
                         if (commitData && commitData.author) {
                             console.log("Found author for deployment commit:", commitData.author.login);
