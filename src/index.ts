@@ -8,6 +8,24 @@ import {
   isValidUrl,
 } from "./main";
 
+function parseMetadata(
+  input: string,
+): { data: Record<string, string | number> } | { error: string } {
+  const metadata: Record<string, string | number> = {};
+  const lines = input.split("\n").filter((line) => line.trim());
+  for (const line of lines) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) {
+      return { error: `Invalid metadata line: "${line}". Expected format: "key: value"` };
+    }
+    const key = line.slice(0, colonIndex).trim();
+    const rawValue = line.slice(colonIndex + 1).trim();
+    const numValue = Number(rawValue);
+    metadata[key] = isNaN(numValue) ? rawValue : numValue;
+  }
+  return { data: metadata };
+}
+
 (async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput("build-url");
@@ -47,6 +65,18 @@ import {
 
     const branch = await getBranchName();
     console.log(`Branch name: ${branch}`);
+
+    const metadataInput = core.getInput("metadata");
+    let metadata: Record<string, string | number> | undefined;
+    if (metadataInput) {
+      const result = parseMetadata(metadataInput);
+      if ("error" in result) {
+        core.warning(result.error);
+      } else {
+        metadata = result.data;
+      }
+    }
+
     const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
       method: "POST",
       headers,
@@ -64,6 +94,7 @@ import {
         platform,
         environment: environment.toLowerCase(),
         github_actor: await getActor(),
+        metadata,
       }),
     });
     const content = await response.text();

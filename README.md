@@ -22,6 +22,21 @@ Supported inputs
 - [x] build-url: **Required** input, for the URL of the application build
   - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
+- [ ] metadata: Optional key-value pairs for custom metadata, one per line (e.g. `key: value`)
+
+### With metadata
+
+```yml
+- name: Dispatch for tests
+  uses: empirical-run/dispatch-action@main
+  with:
+    auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
+    environment: production
+    build-url: ${{ steps.prev-step.outputs.url }}
+    metadata: |
+      version: 1.2.3
+      pr_number: 42
+```
 
 ### Vercel deployments
 

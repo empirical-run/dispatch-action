@@ -18,6 +18,9 @@ inputs:
   environment:
     description: "Environment to run the tests on"
     required: true
+  metadata:
+    description: "Key-value pairs, one per line (e.g. 'key: value'). Values can be strings or numbers."
+    required: false
 
 runs:
   using: node20

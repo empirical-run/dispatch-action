@@ -29224,6 +29224,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const main_1 = __nccwpck_require__(399);
+function parseMetadata(input) {
+    const metadata = {};
+    const lines = input.split("\n").filter((line) => line.trim());
+    for (const line of lines) {
+        const colonIndex = line.indexOf(":");
+        if (colonIndex === -1) {
+            return { error: `Invalid metadata line: "${line}". Expected format: "key: value"` };
+        }
+        const key = line.slice(0, colonIndex).trim();
+        const rawValue = line.slice(colonIndex + 1).trim();
+        const numValue = Number(rawValue);
+        metadata[key] = isNaN(numValue) ? rawValue : numValue;
+    }
+    return { data: metadata };
+}
 (async function run() {
     try {
         const buildUrl = core.getInput("build-url");
@@ -29255,6 +29270,17 @@ const main_1 = __nccwpck_require__(399);
         }
         const branch = await (0, main_1.getBranchName)();
         console.log(`Branch name: ${branch}`);
+        const metadataInput = core.getInput("metadata");
+        let metadata;
+        if (metadataInput) {
+            const result = parseMetadata(metadataInput);
+            if ("error" in result) {
+                core.warning(result.error);
+            }
+            else {
+                metadata = result.data;
+            }
+        }
         const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
             method: "POST",
             headers,
@@ -29272,6 +29298,7 @@ const main_1 = __nccwpck_require__(399);
                 platform,
                 environment: environment.toLowerCase(),
                 github_actor: await (0, main_1.getActor)(),
+                metadata,
             }),
         });
         const content = await response.text();
