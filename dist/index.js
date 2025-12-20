@@ -29400,9 +29400,12 @@ async function getBranchName() {
     }
     if (github.context.eventName === "deployment_status" ||
         github.context.eventName === "deployment") {
-        const sha = github.context.payload.deployment.sha;
-        const ref = github.context.payload.deployment.ref;
+        const deployment = github.context.payload.deployment;
+        const sha = deployment.sha;
+        const ref = deployment.ref;
         if (sha === ref) {
+            // Log full deployment payload for debugging
+            console.log("Deployment payload:", JSON.stringify(deployment, null, 2));
             console.log("Deployment event with sha and ref as same value:", sha);
             // Vercel deployments have the sha and ref as the same value, both
             // contain the commit sha. We want to get the branch name instead.
@@ -29410,7 +29413,7 @@ async function getBranchName() {
             let branchName = undefined;
             if (process.env.GITHUB_TOKEN) {
                 // If GITHUB_TOKEN is available, we will get the branch name via Octokit.
-                branchName = getBranchForCommit(sha);
+                branchName = await getBranchForCommit(sha);
             }
             return branchName;
         }
