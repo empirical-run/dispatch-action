@@ -22,25 +22,50 @@ export function getCommitSha(): string {
 async function getBranchForCommit(
   commitSha: string,
 ): Promise<string | undefined> {
+  const octokit = github.getOctokit(process.env.GITHUB_TOKEN!);
+  const { owner, repo } = github.context.repo;
+
+  // Strategy 1: Check if commit is HEAD of any branch
   try {
     console.log("Fetching branch for commit:", commitSha);
-    const octokit = github.getOctokit(process.env.GITHUB_TOKEN!);
     const { data: branches } =
       await octokit.rest.repos.listBranchesForHeadCommit({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
+        owner,
+        repo,
         commit_sha: commitSha,
       });
     console.log("Related branches for commit:", branches);
-    if (branches.length === 0) {
-      console.error("No related branches found for commit:", commitSha);
-      return undefined;
+    if (branches.length > 0) {
+      return branches[0].name;
     }
-    // Return the first branch that contains this commit
-    return branches[0].name;
+    console.log("No related branches found for commit:", commitSha);
   } catch (error) {
-    console.error("Error fetching branch:", error);
+    console.error("Error fetching branches for HEAD commit:", error);
   }
+
+  // Strategy 2: Find via associated PRs (works for merged PRs where commit is no longer at HEAD)
+  try {
+    console.log("Trying to find branch via associated PRs...");
+    const { data: prs } =
+      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner,
+        repo,
+        commit_sha: commitSha,
+      });
+    if (prs && prs.length > 0) {
+      // Prefer the PR where this commit is the merge commit
+      const mergePR = prs.find((pr) => pr.merge_commit_sha === commitSha);
+      const pr = mergePR ?? prs[0];
+      if (pr.base?.ref) {
+        console.log("Found branch via associated PR:", pr.base.ref);
+        return pr.base.ref;
+      }
+    }
+    console.log("No associated PRs found for commit:", commitSha);
+  } catch (error) {
+    console.error("Error fetching associated PRs:", error);
+  }
+
   return undefined;
 }
 
@@ -59,17 +84,16 @@ export async function getBranchName(): Promise<string | undefined> {
     const sha = deployment.sha;
     const ref = deployment.ref;
     if (sha === ref) {
-      // Log full deployment payload for debugging
-      console.log("Deployment payload:", JSON.stringify(deployment, null, 2));
       console.log("Deployment event with sha and ref as same value:", sha);
       // Vercel deployments have the sha and ref as the same value, both
       // contain the commit sha. We want to get the branch name instead.
       // We don't want to send the `ref` as branch name in this case.
-      let branchName = undefined;
+      let branchName: string | undefined = undefined;
       if (process.env.GITHUB_TOKEN) {
         // If GITHUB_TOKEN is available, we will get the branch name via Octokit.
         branchName = await getBranchForCommit(sha);
       }
+
       return branchName;
     } else {
       return ref;
