@@ -29263,6 +29263,7 @@ function parseMetadata(input) {
         const authKey = core.getInput("auth-key");
         const headers = {
             "Content-Type": "application/json",
+            "User-Agent": "@empiricalrun/dispatch-action",
         };
         if (authKey) {
             console.log(`Setting an auth header for the request.`);
