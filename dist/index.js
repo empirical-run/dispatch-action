@@ -29230,7 +29230,9 @@ function parseMetadata(input) {
     for (const line of lines) {
         const colonIndex = line.indexOf(":");
         if (colonIndex === -1) {
-            return { error: `Invalid metadata line: "${line}". Expected format: "key: value"` };
+            return {
+                error: `Invalid metadata line: "${line}". Expected format: "key: value"`,
+            };
         }
         const key = line.slice(0, colonIndex).trim();
         const rawValue = line.slice(colonIndex + 1).trim();
