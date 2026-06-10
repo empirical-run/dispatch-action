@@ -29241,7 +29241,7 @@ function parseMetadata(input) {
     }
     return { data: metadata };
 }
-(async function run() {
+void (async function run() {
     try {
         const buildUrl = core.getInput("build-url");
         if (!buildUrl) {
@@ -29314,8 +29314,9 @@ function parseMetadata(input) {
     }
     catch (error) {
         // Fail the workflow run if an error occurs
-        if (error instanceof Error)
+        if (error instanceof Error) {
             core.setFailed(error.message);
+        }
     }
 })();
 

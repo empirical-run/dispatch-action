@@ -28,7 +28,7 @@ function parseMetadata(
   return { data: metadata };
 }
 
-(async function run(): Promise<void> {
+void (async function run(): Promise<void> {
   try {
     const buildUrl: string = core.getInput("build-url");
     if (!buildUrl) {
@@ -108,6 +108,8 @@ function parseMetadata(
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message);
+    if (error instanceof Error) {
+      core.setFailed(error.message);
+    }
   }
 })();
