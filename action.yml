@@ -13,15 +13,19 @@ inputs:
     description: "Auth key for the application"
     required: false
   build-url:
-    description: "URL to the application to be tested"
-    required: true
+    description: "Deprecated: the build URL is now sent to tests as the BUILD_URL environment variable. Use the environment-variables input to set BUILD_URL instead."
+    required: false
+    deprecationMessage: "build-url is deprecated. Set BUILD_URL via the environment-variables input instead."
   environment:
     description: "Environment to run the tests on"
     required: true
+  environment-variables:
+    description: "Environment variables for the test run, one per line (e.g. 'NAME: value'). These override the environment's configured variables."
+    required: false
   metadata:
     description: "Key-value pairs, one per line (e.g. 'key: value'). Values can be strings or numbers."
     required: false
 
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
