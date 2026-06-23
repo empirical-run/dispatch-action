@@ -29962,7 +29962,6 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(4442));
-const github = __importStar(__nccwpck_require__(5251));
 const main_1 = __nccwpck_require__(9026);
 function parseMetadata(input) {
     const metadata = {};
@@ -30057,24 +30056,19 @@ void (async function run() {
             environmentVariables = result.data;
         }
         const payload = {
-            origin: {
-                owner: github.context.repo.owner,
-                name: github.context.repo.repo,
-            },
             build: {
                 url: buildUrl || undefined,
                 commit: (0, main_1.getCommitSha)(),
                 branch,
                 commit_url: (0, main_1.getCommitUrl)(),
             },
-            platform: (platform || undefined),
             environment: environment.toLowerCase(),
             github_actor: await (0, main_1.getActor)(),
             metadata,
             environment_variables_overrides: environmentVariables,
         };
-        const response = await fetch("https://dispatch.empirical.run/v1/trigger", {
-            method: "POST",
+        const response = await fetch("https://api.empirical.run/api/test-runs", {
+            method: "PUT",
             headers,
             body: JSON.stringify(payload),
         });
