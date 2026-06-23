@@ -71,7 +71,3 @@ pnpm install
 pnpm --filter @empiricalrun/shared-types build
 pnpm --filter @empiricalrun/dispatch-action build
 ```
-
-The request payload is typed against `DispatchTriggerRequestV1` from
-`@empiricalrun/shared-types/api/dispatch`, which the dispatch-worker also uses —
-contract drift fails `type-check`.
