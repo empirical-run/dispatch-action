@@ -25,6 +25,9 @@ inputs:
   metadata:
     description: "Key-value pairs, one per line (e.g. 'key: value'). Values can be strings or numbers."
     required: false
+  concurrency:
+    description: "Concurrency settings, one per line: group and on-conflict (cancel or wait)."
+    required: false
 
 runs:
   using: node24

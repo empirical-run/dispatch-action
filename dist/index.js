@@ -30017,6 +30017,52 @@ function parseEnvironmentVariables(input) {
     }
     return { data: variables };
 }
+function parseConcurrency(input) {
+    const fields = new Map();
+    const lines = input.split("\n").filter((line) => line.trim());
+    for (const line of lines) {
+        const colonIndex = line.indexOf(":");
+        if (colonIndex === -1) {
+            return {
+                error: `Invalid concurrency line: "${line}". Expected format: "key: value"`,
+            };
+        }
+        const key = line.slice(0, colonIndex).trim();
+        const value = line.slice(colonIndex + 1).trim();
+        if (key !== "group" && key !== "on-conflict") {
+            return {
+                error: `Invalid concurrency key: "${key}". Expected "group" or "on-conflict".`,
+            };
+        }
+        if (fields.has(key)) {
+            return { error: `Duplicate concurrency key: "${key}".` };
+        }
+        fields.set(key, value);
+    }
+    const group = fields.get("group");
+    const onConflict = fields.get("on-conflict");
+    if (!group || !onConflict) {
+        return {
+            error: 'Invalid concurrency config: both "group" and "on-conflict" are required.',
+        };
+    }
+    if (group.length > 512) {
+        return {
+            error: 'Invalid concurrency config: "group" must be at most 512 characters.',
+        };
+    }
+    if (onConflict !== "cancel" && onConflict !== "wait") {
+        return {
+            error: 'Invalid concurrency config: "on-conflict" must be either "cancel" or "wait".',
+        };
+    }
+    return {
+        data: {
+            group,
+            on_conflict: onConflict,
+        },
+    };
+}
 void (async function run() {
     try {
         const buildUrl = core.getInput("build-url");
@@ -30066,6 +30112,16 @@ void (async function run() {
             }
             environmentVariables = result.data;
         }
+        const concurrencyInput = core.getInput("concurrency");
+        let concurrency;
+        if (concurrencyInput) {
+            const result = parseConcurrency(concurrencyInput);
+            if ("error" in result) {
+                core.setFailed(result.error);
+                return;
+            }
+            concurrency = result.data;
+        }
         const { error, response } = await apiWorkerClient.PUT("/api/test-runs", {
             headers: authKey
                 ? {
@@ -30083,6 +30139,7 @@ void (async function run() {
                 github_actor: await (0, main_1.getActor)(),
                 metadata,
                 environment_variables_overrides: environmentVariables,
+                concurrency,
             },
         });
         if (!response.ok) {

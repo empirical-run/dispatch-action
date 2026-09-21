@@ -14,6 +14,9 @@
     environment: production # or staging or mobile
     environment-variables: |
       BUILD_URL: ${{ steps.prev-step.outputs.url }}
+    concurrency: |
+      group: production/acme/web
+      on-conflict: wait
 ```
 
 Supported inputs
@@ -25,6 +28,7 @@ Supported inputs
   - For web, this points to a URL of the deployment (e.g. `https://staging.your-app.com`)
   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
 - [ ] metadata: Optional key-value pairs for custom metadata, one per line (e.g. `key: value`)
+- [ ] concurrency: Optional concurrency settings, with `group` and `on-conflict` (`cancel` or `wait`) on separate lines.
 - [ ] build-url: **Deprecated**, the build URL is sent to tests as the `BUILD_URL` environment variable — set it via `environment-variables` instead.
 
 ### With metadata
