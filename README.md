@@ -74,10 +74,11 @@ unchanging release reference.
 Source lives in the empirical monorepo under `github-actions/dispatch` (part of
 the pnpm workspace). The public `empirical-run/dispatch-action` repo is a
 distribution mirror (`action.yml` + generated `dist/`), published by the
-`sync-github-action-dispatch` workflow. The monorepo's `release/v1` branch syncs
-to public `main` for legacy `@main` consumers, while monorepo `main` syncs to the
-public `release/v2` branch. Stable releases are published as exact and moving
-major-version tags.
+`sync-github-action-dispatch` workflow. Monorepo `main` syncs to both public
+`main` (v1 and legacy `@main` consumers) and public `release/v2`. Stable
+releases are published as exact and moving major-version tags. See the
+[release guide](https://github.com/empirical-run/test-generator/blob/main/github-actions/RELEASING.md)
+for the release steps.
 
 ```sh
 pnpm install
