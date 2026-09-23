@@ -29922,6 +29922,24 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 1098:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.withLegacyBuildUrlOverride = withLegacyBuildUrlOverride;
+function withLegacyBuildUrlOverride(overrides, legacyBuildUrl) {
+    if (!legacyBuildUrl ||
+        overrides?.some((override) => override.name === "BUILD_URL")) {
+        return overrides;
+    }
+    return [...(overrides ?? []), { name: "BUILD_URL", value: legacyBuildUrl }];
+}
+
+
+/***/ }),
+
 /***/ 3887:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -29966,6 +29984,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(4442));
 const openapi_fetch_1 = __importDefault(__nccwpck_require__(6791));
+const environment_variables_1 = __nccwpck_require__(1098);
 const main_1 = __nccwpck_require__(9026);
 const apiWorkerClient = (0, openapi_fetch_1.default)({
     baseUrl: "https://api.empirical.run",
@@ -30112,6 +30131,7 @@ void (async function run() {
             }
             environmentVariables = result.data;
         }
+        environmentVariables = (0, environment_variables_1.withLegacyBuildUrlOverride)(environmentVariables, buildUrl);
         const concurrencyInput = core.getInput("concurrency");
         let concurrency;
         if (concurrencyInput) {
@@ -30130,7 +30150,6 @@ void (async function run() {
                 : undefined,
             body: {
                 build: {
-                    url: buildUrl || undefined,
                     commit: (0, main_1.getCommitSha)(),
                     branch,
                     commit_url: (0, main_1.getCommitUrl)(),
