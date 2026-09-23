@@ -30086,7 +30086,7 @@ void (async function run() {
     try {
         const buildUrl = core.getInput("build-url");
         if (buildUrl) {
-            core.warning(`build-url is deprecated: it is sent to tests as the BUILD_URL environment variable. Set BUILD_URL via the environment-variables input instead.`);
+            core.warning(`build-url is deprecated. It is sent as BUILD_URL unless an explicit BUILD_URL is set. Set BUILD_URL via the environment-variables input instead.`);
             if (!(0, main_1.isValidUrl)(buildUrl)) {
                 core.setFailed(`Invalid config: build-url must be a valid URL.`);
                 return;
@@ -30094,22 +30094,19 @@ void (async function run() {
         }
         const slackWebhookUrl = core.getInput("slack-webhook-url");
         if (slackWebhookUrl) {
-            console.log(`Warning: slack-webhook-url is not a supported input, and will be ignored.`);
+            core.warning(`slack-webhook-url is not a supported input, and will be ignored.`);
         }
         const platform = core.getInput("platform");
         if (platform) {
-            console.warn(`Warning: platform is a deprecated input, you should use environment instead.`);
+            core.warning(`platform is a deprecated input; use environment instead.`);
         }
         const environment = core.getInput("environment");
         if (!platform && !environment) {
             core.setFailed(`Missing config parameter: either of "environment" or "platform" (deprecated) needs to passed`);
+            return;
         }
         const authKey = core.getInput("auth-key");
-        if (authKey) {
-            console.log(`Setting an auth header for the request.`);
-        }
         const branch = await (0, main_1.getBranchName)();
-        console.log(`Branch name: ${branch}`);
         const metadataInput = core.getInput("metadata");
         let metadata;
         if (metadataInput) {
@@ -30142,12 +30139,11 @@ void (async function run() {
             }
             concurrency = result.data;
         }
-        const { error, response } = await apiWorkerClient.PUT("/api/test-runs", {
-            headers: authKey
-                ? {
-                    Authorization: `Bearer ${authKey}`,
-                }
-                : undefined,
+        const headers = authKey
+            ? { Authorization: `Bearer ${authKey}` }
+            : undefined;
+        const { data, error, response } = await apiWorkerClient.PUT("/api/test-runs", {
+            headers,
             body: {
                 build: {
                     commit: (0, main_1.getCommitSha)(),
@@ -30164,9 +30160,36 @@ void (async function run() {
         if (!response.ok) {
             core.setFailed(formatApiError(error) ||
                 `Dispatch request failed (${response.status} ${response.statusText || "Unknown status"})`);
+            return;
         }
-        else {
-            console.log(`Dispatch request successful.`);
+        const testRun = data?.data.test_run;
+        if (!testRun) {
+            core.warning("Dispatch succeeded, but the response had no test run.");
+            return;
+        }
+        // The trigger response includes the project ID at runtime. Resolve its
+        // slug with the existing project endpoint to construct the dashboard URL.
+        if (!("project_id" in testRun) || typeof testRun.project_id !== "number") {
+            core.warning(`Test run #${testRun.id} was created, but its project ID is missing from the response.`);
+            return;
+        }
+        try {
+            const projectResponse = await apiWorkerClient.GET("/api/projects/{id}", {
+                headers,
+                params: { path: { id: testRun.project_id } },
+            });
+            const projectSlug = projectResponse.data?.data.slug;
+            if (!projectResponse.response.ok || !projectSlug) {
+                core.warning(`Test run #${testRun.id} was created, but the project slug could not be resolved for its report link.`);
+                return;
+            }
+            const reportUrl = `https://empirical.run/${encodeURIComponent(projectSlug)}/test-runs/${testRun.id}`;
+            core.info(`Open report: ${reportUrl}`);
+            core.setOutput("report-url", reportUrl);
+            await core.summary.addLink("Open report", reportUrl).write();
+        }
+        catch (error) {
+            core.warning(`Could not add the report link: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
     catch (error) {
@@ -30226,6 +30249,9 @@ exports.getRepository = getRepository;
 exports.getActor = getActor;
 const github = __importStar(__nccwpck_require__(5251));
 const URL = (__nccwpck_require__(7016).URL);
+function errorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+}
 const isValidUrl = (s) => {
     try {
         new URL(s);
@@ -30248,24 +30274,20 @@ async function getBranchForCommit(commitSha) {
     const { owner, repo } = github.context.repo;
     // Strategy 1: Check if commit is HEAD of any branch
     try {
-        console.log("Fetching branch for commit:", commitSha);
         const { data: branches } = await octokit.rest.repos.listBranchesForHeadCommit({
             owner,
             repo,
             commit_sha: commitSha,
         });
-        console.log("Related branches for commit:", branches);
         if (branches.length > 0) {
             return branches[0].name;
         }
-        console.log("No related branches found for commit:", commitSha);
     }
     catch (error) {
-        console.error("Error fetching branches for HEAD commit:", error);
+        console.warn(`Could not look up branches for ${commitSha}: ${errorMessage(error)}`);
     }
     // Strategy 2: Find via associated PRs (works for merged PRs where commit is no longer at HEAD)
     try {
-        console.log("Trying to find branch via associated PRs...");
         const { data: prs } = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
             owner,
             repo,
@@ -30276,19 +30298,16 @@ async function getBranchForCommit(commitSha) {
             const mergePR = prs.find((pr) => pr.merge_commit_sha === commitSha);
             const pr = mergePR ?? prs[0];
             if (pr.base?.ref) {
-                console.log("Found branch via associated PR:", pr.base.ref);
                 return pr.base.ref;
             }
         }
-        console.log("No associated PRs found for commit:", commitSha);
     }
     catch (error) {
-        console.error("Error fetching associated PRs:", error);
+        console.warn(`Could not look up PRs for ${commitSha}: ${errorMessage(error)}`);
     }
     return undefined;
 }
 async function getBranchName() {
-    console.log("Get branch name for event", github.context.eventName);
     if (github.context.eventName === "pull_request") {
         // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
         // so we pick the ref of the `head` from the pull request object
@@ -30300,7 +30319,6 @@ async function getBranchName() {
         const sha = deployment.sha;
         const ref = deployment.ref;
         if (sha === ref) {
-            console.log("Deployment event with sha and ref as same value:", sha);
             // Vercel deployments have the sha and ref as the same value, both
             // contain the commit sha. We want to get the branch name instead.
             // We don't want to send the `ref` as branch name in this case.
@@ -30326,7 +30344,6 @@ async function getBranchName() {
             return github.context.ref.replace("refs/tags/", "");
         }
     }
-    console.log(`No branch info found for event: ${github.context.eventName}`);
     return "";
 }
 function getRepository() {
@@ -30335,7 +30352,6 @@ function getRepository() {
     return `${owner}/${name}`;
 }
 async function getActor() {
-    console.log("Getting author for event:", github.context.eventName);
     switch (github.context.eventName) {
         case "push":
             // For push events, the author is in event.commits[0].author.username or .name
@@ -30359,7 +30375,6 @@ async function getActor() {
                 github.context.payload.deployment.sha) {
                 try {
                     const commitSha = github.context.payload.deployment.sha;
-                    console.log("Fetching author for deployment commit:", commitSha);
                     // Check if GITHUB_TOKEN is available
                     if (process.env.GITHUB_TOKEN) {
                         const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
@@ -30369,16 +30384,12 @@ async function getActor() {
                             ref: commitSha,
                         });
                         if (commitData && commitData.author) {
-                            console.log("Found author for deployment commit:", commitData.author.login);
                             return commitData.author.login || github.context.actor;
                         }
                     }
-                    else {
-                        console.log("GITHUB_TOKEN not available, cannot fetch commit author");
-                    }
                 }
                 catch (error) {
-                    console.error("Error fetching commit author:", error);
+                    console.warn(`Could not look up commit author: ${errorMessage(error)}`);
                 }
             }
             break;
