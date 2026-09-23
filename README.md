@@ -8,7 +8,7 @@
   run: ...
 
 - name: Dispatch for tests
-  uses: empirical-run/dispatch-action@main
+  uses: empirical-run/dispatch-action@v1
   with:
     auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
     environment: production # or staging or mobile
@@ -35,7 +35,7 @@ Supported inputs
 
 ```yml
 - name: Dispatch for tests
-  uses: empirical-run/dispatch-action@main
+  uses: empirical-run/dispatch-action@v1
   with:
     auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
     environment: production
@@ -53,7 +53,7 @@ environment variable to pull branch info.
 
 ```yml
 - name: Dispatch for tests
-  uses: empirical-run/dispatch-action@main
+  uses: empirical-run/dispatch-action@v1
   with:
     auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
     environment: production # or staging or mobile
@@ -63,12 +63,21 @@ environment variable to pull branch info.
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Versioning
+
+Use `@v1` to receive backwards-compatible fixes without automatically adopting
+breaking releases. Pin an exact version such as `@v1.0.0` when you need an
+unchanging release reference.
+
 ## Development
 
 Source lives in the empirical monorepo under `github-actions/dispatch` (part of
 the pnpm workspace). The public `empirical-run/dispatch-action` repo is a
 distribution mirror (`action.yml` + generated `dist/`), published by the
-`sync-github-action-dispatch` workflow on every push to main.
+`sync-github-action-dispatch` workflow. The monorepo's `release/v1` branch syncs
+to public `main` for legacy `@main` consumers, while monorepo `main` syncs to the
+public `release/v2` branch. Stable releases are published as exact and moving
+major-version tags.
 
 ```sh
 pnpm install
