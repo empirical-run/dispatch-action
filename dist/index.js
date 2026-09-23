@@ -30148,7 +30148,7 @@ void (async function run() {
                 build: {
                     commit: (0, main_1.getCommitSha)(),
                     branch,
-                    commit_url: (0, main_1.getCommitUrl)(),
+                    repo: (0, main_1.getRepository)(),
                 },
                 environment: environment.toLowerCase(),
                 github_actor: await (0, main_1.getActor)(),
@@ -30245,7 +30245,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isValidUrl = void 0;
 exports.getCommitSha = getCommitSha;
 exports.getBranchName = getBranchName;
-exports.getCommitUrl = getCommitUrl;
+exports.getRepository = getRepository;
 exports.getActor = getActor;
 const github = __importStar(__nccwpck_require__(5251));
 const URL = (__nccwpck_require__(7016).URL);
@@ -30346,11 +30346,10 @@ async function getBranchName() {
     }
     return "";
 }
-function getCommitUrl() {
-    const commitSha = getCommitSha();
+function getRepository() {
     const owner = github.context.repo.owner;
     const name = github.context.repo.repo;
-    return `https://github.com/${owner}/${name}/commit/${commitSha}`;
+    return `${owner}/${name}`;
 }
 async function getActor() {
     switch (github.context.eventName) {
