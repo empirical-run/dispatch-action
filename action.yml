@@ -15,7 +15,6 @@ inputs:
   build-url:
     description: "Deprecated: the build URL is now sent to tests as the BUILD_URL environment variable. Use the environment-variables input to set BUILD_URL instead."
     required: false
-    deprecationMessage: "build-url is deprecated. Set BUILD_URL via the environment-variables input instead."
   environment:
     description: "Environment to run the tests on"
     required: true
@@ -28,6 +27,10 @@ inputs:
   concurrency:
     description: "Concurrency settings, one per line: group and on-conflict (cancel or wait)."
     required: false
+
+outputs:
+  report-url:
+    description: "URL of the triggered test run report"
 
 runs:
   using: node24
