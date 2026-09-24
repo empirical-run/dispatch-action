@@ -30152,6 +30152,7 @@ void (async function run() {
                 },
                 environment: environment.toLowerCase(),
                 github_actor: await (0, main_1.getActor)(),
+                trigger: await (0, main_1.getTrigger)(branch),
                 metadata,
                 environment_variables_overrides: environmentVariables,
                 concurrency,
@@ -30247,6 +30248,7 @@ exports.getCommitSha = getCommitSha;
 exports.getBranchName = getBranchName;
 exports.getRepository = getRepository;
 exports.getActor = getActor;
+exports.getTrigger = getTrigger;
 const github = __importStar(__nccwpck_require__(5251));
 const URL = (__nccwpck_require__(7016).URL);
 function errorMessage(error) {
@@ -30397,6 +30399,52 @@ async function getActor() {
     // Default fallback to the actor who triggered the workflow
     // https://github.com/actions/toolkit/issues/1143#issuecomment-2193348740
     return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
+}
+function workflowRunUrl() {
+    const { serverUrl, runId } = github.context;
+    const { owner, repo } = github.context.repo;
+    if (!serverUrl || !runId || !owner || !repo) {
+        return undefined;
+    }
+    return `${serverUrl}/${owner}/${repo}/actions/runs/${runId}`;
+}
+// Why this run exists, from the workflow event. Sent next to `build` so the
+// API can tell a pre-merge PR run from a push or deployment without guessing
+// from branch names. `branch` is the value getBranchName() already resolved,
+// so deployment events carry the branch looked up from the commit.
+async function getTrigger(branch) {
+    const actor = await getActor();
+    const url = workflowRunUrl();
+    const ref = branch || undefined;
+    switch (github.context.eventName) {
+        case "pull_request":
+        case "pull_request_target": {
+            const pr = github.context.payload.pull_request;
+            if (pr?.head?.ref && pr?.base?.ref) {
+                return {
+                    event: "pull_request",
+                    pull_request: {
+                        number: typeof pr.number === "number" ? pr.number : undefined,
+                        head: pr.head.ref,
+                        base: pr.base.ref,
+                    },
+                    ref: pr.head.ref,
+                    actor,
+                    url,
+                };
+            }
+            return { event: "pull_request", ref, actor, url };
+        }
+        case "push":
+            return { event: "push", ref, actor, url };
+        case "deployment":
+        case "deployment_status":
+            return { event: "deployment", ref, actor, url };
+        case "workflow_dispatch":
+            return { event: "workflow_dispatch", ref, actor, url };
+        default:
+            return { event: "other", ref, actor, url };
+    }
 }
 
 
