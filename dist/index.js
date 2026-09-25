@@ -30143,7 +30143,8 @@ void (async function run() {
             ? { Authorization: `Bearer ${authKey}` }
             : undefined;
         const { data, error, response } = await apiWorkerClient.PUT("/api/test-runs", {
-            headers,
+            // Telemetry: which workflow events callers dispatch from.
+            headers: { ...headers, "X-GitHub-Event-Name": (0, main_1.getEventName)() },
             body: {
                 build: {
                     commit: (0, main_1.getCommitSha)(),
@@ -30152,7 +30153,7 @@ void (async function run() {
                 },
                 environment: environment.toLowerCase(),
                 github_actor: await (0, main_1.getActor)(),
-                trigger: await (0, main_1.getTrigger)(branch),
+                trigger: (0, main_1.getTrigger)(),
                 metadata,
                 environment_variables_overrides: environmentVariables,
                 concurrency,
@@ -30244,6 +30245,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isValidUrl = void 0;
+exports.getEventName = getEventName;
 exports.getCommitSha = getCommitSha;
 exports.getBranchName = getBranchName;
 exports.getRepository = getRepository;
@@ -30264,8 +30266,17 @@ const isValidUrl = (s) => {
     }
 };
 exports.isValidUrl = isValidUrl;
+// `pull_request_target` carries the same pull_request payload, but its
+// context sha/ref point at the base branch.
+function isPullRequestEvent() {
+    return (github.context.eventName === "pull_request" ||
+        github.context.eventName === "pull_request_target");
+}
+function getEventName() {
+    return github.context.eventName;
+}
 function getCommitSha() {
-    if (github.context.eventName === "pull_request") {
+    if (isPullRequestEvent()) {
         // github.context.sha will give sha for the merged commit
         return github.context.payload.pull_request.head.sha;
     }
@@ -30310,7 +30321,7 @@ async function getBranchForCommit(commitSha) {
     return undefined;
 }
 async function getBranchName() {
-    if (github.context.eventName === "pull_request") {
+    if (isPullRequestEvent()) {
         // github.context.ref will give ref for the merged commit, which is refs/pull/<pr_number>/merge
         // so we pick the ref of the `head` from the pull request object
         return github.context.payload.pull_request.head.ref;
@@ -30400,51 +30411,24 @@ async function getActor() {
     // https://github.com/actions/toolkit/issues/1143#issuecomment-2193348740
     return process.env.GITHUB_TRIGGERING_ACTOR || github.context.actor;
 }
-function workflowRunUrl() {
-    const { serverUrl, runId } = github.context;
-    const { owner, repo } = github.context.repo;
-    if (!serverUrl || !runId || !owner || !repo) {
+// Only a pull request changes how the API picks tests (head merged with base),
+// so other events send no trigger. The raw event name goes in a header instead.
+function getTrigger() {
+    if (!isPullRequestEvent()) {
         return undefined;
     }
-    return `${serverUrl}/${owner}/${repo}/actions/runs/${runId}`;
-}
-// Why this run exists, from the workflow event. Sent next to `build` so the
-// API can tell a pre-merge PR run from a push or deployment without guessing
-// from branch names. `branch` is the value getBranchName() already resolved,
-// so deployment events carry the branch looked up from the commit.
-async function getTrigger(branch) {
-    const actor = await getActor();
-    const url = workflowRunUrl();
-    const ref = branch || undefined;
-    switch (github.context.eventName) {
-        case "pull_request":
-        case "pull_request_target": {
-            const pr = github.context.payload.pull_request;
-            if (pr?.head?.ref && pr?.base?.ref) {
-                return {
-                    event: "pull_request",
-                    pull_request: {
-                        number: typeof pr.number === "number" ? pr.number : undefined,
-                        head: pr.head.ref,
-                        base: pr.base.ref,
-                    },
-                    ref: pr.head.ref,
-                    actor,
-                    url,
-                };
-            }
-            return { event: "pull_request", ref, actor, url };
-        }
-        case "push":
-            return { event: "push", ref, actor, url };
-        case "deployment":
-        case "deployment_status":
-            return { event: "deployment", ref, actor, url };
-        case "workflow_dispatch":
-            return { event: "workflow_dispatch", ref, actor, url };
-        default:
-            return { event: "other", ref, actor, url };
+    const pr = github.context.payload.pull_request;
+    if (!pr?.head?.ref || !pr?.base?.ref) {
+        return undefined;
     }
+    return {
+        event: "pull_request",
+        pull_request: {
+            number: typeof pr.number === "number" ? pr.number : undefined,
+            head: pr.head.ref,
+            base: pr.base.ref,
+        },
+    };
 }
 
 
