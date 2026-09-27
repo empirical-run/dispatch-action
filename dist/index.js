@@ -29922,6 +29922,96 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 6614:
+/***/ ((module) => {
+
+"use strict";
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var test_runs_exports = {};
+__export(test_runs_exports, {
+  TERMINAL_SHARD_STATES: () => TERMINAL_SHARD_STATES,
+  TERMINAL_STATES: () => TERMINAL_STATES,
+  TestRunErrorCode: () => TestRunErrorCode,
+  TestRunErrorCodeDescriptions: () => TestRunErrorCodeDescriptions,
+  TestRunState: () => TestRunState
+});
+module.exports = __toCommonJS(test_runs_exports);
+var TestRunState = /* @__PURE__ */ ((TestRunState2) => {
+  TestRunState2["Pending"] = "pending";
+  TestRunState2["Queued"] = "queued";
+  TestRunState2["Cancelling"] = "cancelling";
+  TestRunState2["Cancelled"] = "cancelled";
+  TestRunState2["Ended"] = "ended";
+  TestRunState2["Started"] = "started";
+  TestRunState2["Error"] = "error";
+  TestRunState2["Interrupted"] = "interrupted";
+  return TestRunState2;
+})(TestRunState || {});
+const TERMINAL_STATES = [
+  "cancelling" /* Cancelling */,
+  "cancelled" /* Cancelled */,
+  "ended" /* Ended */,
+  "error" /* Error */,
+  "interrupted" /* Interrupted */
+];
+var TestRunErrorCode = /* @__PURE__ */ ((TestRunErrorCode2) => {
+  TestRunErrorCode2["BranchMissing"] = "branch_missing";
+  TestRunErrorCode2["ProviderError"] = "provider_error";
+  TestRunErrorCode2["MergeConflict"] = "merge_conflict";
+  TestRunErrorCode2["DispatchFailed"] = "dispatch_failed";
+  TestRunErrorCode2["ReportNotGenerated"] = "report_not_generated";
+  TestRunErrorCode2["RunFailedWithError"] = "run_failed_with_error";
+  TestRunErrorCode2["WorkerInterrupted"] = "worker_interrupted";
+  TestRunErrorCode2["RunTimedOut"] = "run_timed_out";
+  TestRunErrorCode2["MergeReportsFailed"] = "merge_reports_failed";
+  TestRunErrorCode2["InvalidJobContext"] = "invalid_job_context";
+  TestRunErrorCode2["AllShardError"] = "all_shard_error";
+  TestRunErrorCode2["EmptySelection"] = "empty_selection";
+  return TestRunErrorCode2;
+})(TestRunErrorCode || {});
+const TestRunErrorCodeDescriptions = {
+  ["branch_missing" /* BranchMissing */]: "The explicitly requested test branch does not exist",
+  ["provider_error" /* ProviderError */]: "The test-code provider failed during branch resolution",
+  ["merge_conflict" /* MergeConflict */]: "Merge conflict detected",
+  ["dispatch_failed" /* DispatchFailed */]: "Failed to dispatch test run",
+  ["report_not_generated" /* ReportNotGenerated */]: "Test report was not generated",
+  ["run_failed_with_error" /* RunFailedWithError */]: "Test run failed with error",
+  ["worker_interrupted" /* WorkerInterrupted */]: "Test run was interrupted",
+  ["run_timed_out" /* RunTimedOut */]: "Test run exceeded the maximum duration",
+  ["merge_reports_failed" /* MergeReportsFailed */]: "Failed to merge sharded reports",
+  ["empty_selection" /* EmptySelection */]: "The run's selection (tags or test case ids) matched no tests",
+  ["invalid_job_context" /* InvalidJobContext */]: "Missing or invalid job configuration",
+  ["all_shard_error" /* AllShardError */]: "All Shards Errored"
+};
+const TERMINAL_SHARD_STATES = /* @__PURE__ */ new Set([
+  "ended",
+  "error",
+  "interrupted",
+  "cancelled"
+]);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
 /***/ 1098:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -29986,6 +30076,7 @@ const core = __importStar(__nccwpck_require__(4442));
 const openapi_fetch_1 = __importDefault(__nccwpck_require__(6791));
 const environment_variables_1 = __nccwpck_require__(1098);
 const main_1 = __nccwpck_require__(9026);
+const wait_1 = __nccwpck_require__(734);
 const apiWorkerClient = (0, openapi_fetch_1.default)({
     baseUrl: "https://api.empirical.run",
     headers: {
@@ -30082,6 +30173,32 @@ function parseConcurrency(input) {
         },
     };
 }
+async function shareReportLink(testRun, headers) {
+    // The trigger response includes the project ID at runtime. Resolve its
+    // slug with the existing project endpoint to construct the dashboard URL.
+    if (typeof testRun.project_id !== "number") {
+        core.warning(`Test run #${testRun.id} was created, but its project ID is missing from the response.`);
+        return;
+    }
+    try {
+        const projectResponse = await apiWorkerClient.GET("/api/projects/{id}", {
+            headers,
+            params: { path: { id: testRun.project_id } },
+        });
+        const projectSlug = projectResponse.data?.data.slug;
+        if (!projectResponse.response.ok || !projectSlug) {
+            core.warning(`Test run #${testRun.id} was created, but the project slug could not be resolved for its report link.`);
+            return;
+        }
+        const reportUrl = `https://empirical.run/${encodeURIComponent(projectSlug)}/test-runs/${testRun.id}`;
+        core.info(`Open report: ${reportUrl}`);
+        core.setOutput("report-url", reportUrl);
+        await core.summary.addLink("Open report", reportUrl).write();
+    }
+    catch (error) {
+        core.warning(`Could not add the report link: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
 void (async function run() {
     try {
         const buildUrl = core.getInput("build-url");
@@ -30139,6 +30256,7 @@ void (async function run() {
             }
             concurrency = result.data;
         }
+        const wait = core.getInput("wait").trim().toLowerCase() === "true";
         const headers = authKey
             ? { Authorization: `Bearer ${authKey}` }
             : undefined;
@@ -30167,31 +30285,67 @@ void (async function run() {
         const testRun = data?.data.test_run;
         if (!testRun) {
             core.warning("Dispatch succeeded, but the response had no test run.");
-            return;
-        }
-        // The trigger response includes the project ID at runtime. Resolve its
-        // slug with the existing project endpoint to construct the dashboard URL.
-        if (!("project_id" in testRun) || typeof testRun.project_id !== "number") {
-            core.warning(`Test run #${testRun.id} was created, but its project ID is missing from the response.`);
-            return;
-        }
-        try {
-            const projectResponse = await apiWorkerClient.GET("/api/projects/{id}", {
-                headers,
-                params: { path: { id: testRun.project_id } },
-            });
-            const projectSlug = projectResponse.data?.data.slug;
-            if (!projectResponse.response.ok || !projectSlug) {
-                core.warning(`Test run #${testRun.id} was created, but the project slug could not be resolved for its report link.`);
-                return;
+            if (wait) {
+                core.setFailed("Cannot wait for the test run: its ID is unknown.");
             }
-            const reportUrl = `https://empirical.run/${encodeURIComponent(projectSlug)}/test-runs/${testRun.id}`;
-            core.info(`Open report: ${reportUrl}`);
-            core.setOutput("report-url", reportUrl);
-            await core.summary.addLink("Open report", reportUrl).write();
+            return;
         }
-        catch (error) {
-            core.warning(`Could not add the report link: ${error instanceof Error ? error.message : String(error)}`);
+        await shareReportLink(testRun, headers);
+        if (wait) {
+            core.info(`Waiting for test run #${testRun.id} to finish...`);
+            (0, wait_1.cancelRunOnTermination)({
+                cancel: async (signal) => {
+                    core.info(`Received ${signal}; cancelling test run #${testRun.id}.`);
+                    try {
+                        const { response } = await apiWorkerClient.POST("/api/test-runs/{id}/cancel", {
+                            headers,
+                            params: { path: { id: testRun.id } },
+                            body: {
+                                reason: `GitHub Actions job was cancelled: ${(0, main_1.getWorkflowRunUrl)()}`,
+                            },
+                            // Leave headroom before the runner escalates to SIGKILL.
+                            signal: AbortSignal.timeout(5_000),
+                        });
+                        if (response.ok) {
+                            core.info(`Cancelled test run #${testRun.id}.`);
+                        }
+                        else if (response.status === 412) {
+                            core.info(`Test run #${testRun.id} had already finished.`);
+                        }
+                        else {
+                            core.warning(`Could not cancel test run #${testRun.id} (${response.status}).`);
+                        }
+                    }
+                    catch (error) {
+                        core.warning(`Could not cancel test run #${testRun.id}: ${error instanceof Error ? error.message : String(error)}`);
+                    }
+                },
+                exit: () => process.exit(1),
+            });
+            let lastState;
+            const result = await (0, wait_1.waitForTestRun)({
+                fetchRun: async () => {
+                    const { data, error, response } = await apiWorkerClient.GET("/api/v2/test-runs/{id}", { headers, params: { path: { id: testRun.id } } });
+                    if (!response.ok || !data) {
+                        throw new Error(formatApiError(error) ||
+                            `Status request failed (${response.status} ${response.statusText || "Unknown status"})`);
+                    }
+                    return data.data;
+                },
+                onPoll: (run) => {
+                    if (run.state !== lastState) {
+                        lastState = run.state;
+                        core.info(`Test run state: ${run.state ?? "unknown"}`);
+                    }
+                },
+                onFetchError: (error, attempt) => core.warning(`Could not fetch test run status (attempt ${attempt}): ${error instanceof Error ? error.message : String(error)}`),
+            });
+            if (result.passed) {
+                core.info(result.message);
+            }
+            else {
+                core.setFailed(result.message);
+            }
         }
     }
     catch (error) {
@@ -30248,6 +30402,7 @@ exports.isValidUrl = void 0;
 exports.getEventName = getEventName;
 exports.getCommitSha = getCommitSha;
 exports.getBranchName = getBranchName;
+exports.getWorkflowRunUrl = getWorkflowRunUrl;
 exports.getRepository = getRepository;
 exports.getActor = getActor;
 exports.getTrigger = getTrigger;
@@ -30359,6 +30514,10 @@ async function getBranchName() {
     }
     return "";
 }
+function getWorkflowRunUrl() {
+    const { serverUrl, runId } = github.context;
+    return `${serverUrl}/${getRepository()}/actions/runs/${runId}`;
+}
 function getRepository() {
     const owner = github.context.repo.owner;
     const name = github.context.repo.repo;
@@ -30429,6 +30588,86 @@ function getTrigger() {
             base: pr.base.ref,
         },
     };
+}
+
+
+/***/ }),
+
+/***/ 734:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.evaluateTestRun = evaluateTestRun;
+exports.waitForTestRun = waitForTestRun;
+exports.cancelRunOnTermination = cancelRunOnTermination;
+const test_runs_1 = __nccwpck_require__(6614);
+// Bundled into dist by ncc, so a new terminal state reaches the action on its
+// next sync (the sync workflow also triggers on changes to this file).
+const TERMINAL_STATES = new Set(test_runs_1.TERMINAL_STATES);
+function evaluateTestRun(run) {
+    if (!run.state || !TERMINAL_STATES.has(run.state)) {
+        return { done: false };
+    }
+    if (run.state !== "ended") {
+        const reason = run.error_code ?? run.cancellation_reason;
+        return {
+            done: true,
+            passed: false,
+            message: `Test run ${run.state}${reason ? ` (${reason})` : ""}.`,
+        };
+    }
+    // Snoozed failures don't block, matching the GitHub check and PR comment.
+    const failed = run.failed_count_after_snoozing ?? run.failed_count ?? 0;
+    if (failed > 0) {
+        return {
+            done: true,
+            passed: false,
+            message: `Test run ended with ${failed} failed test${failed === 1 ? "" : "s"}.`,
+        };
+    }
+    return { done: true, passed: true, message: "Test run passed." };
+}
+// Polls until the run reaches a terminal state. There is no overall timeout:
+// the job's `timeout-minutes` bounds how long a caller is willing to wait.
+async function waitForTestRun({ fetchRun, onPoll, onFetchError, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), intervalMs = 30_000, maxConsecutiveErrors = 5, }) {
+    let consecutiveErrors = 0;
+    while (true) {
+        try {
+            const run = await fetchRun();
+            consecutiveErrors = 0;
+            onPoll?.(run);
+            const outcome = evaluateTestRun(run);
+            if (outcome.done) {
+                return { passed: outcome.passed, message: outcome.message };
+            }
+        }
+        catch (error) {
+            consecutiveErrors++;
+            onFetchError?.(error, consecutiveErrors);
+            if (consecutiveErrors >= maxConsecutiveErrors) {
+                throw error;
+            }
+        }
+        await sleep(intervalMs);
+    }
+}
+// GitHub cancels a job (or hits its timeout) by sending SIGINT, then SIGTERM
+// ~7.5s later, then SIGKILL. Cancel the run on the first signal so it doesn't
+// keep running with nobody waiting on it. Listening replaces Node's default
+// exit-on-signal, so `exit` must end the process once the cancel settles.
+function cancelRunOnTermination({ cancel, exit, signals = ["SIGINT", "SIGTERM"], source = process, }) {
+    let cancelling = false;
+    for (const signal of signals) {
+        source.on(signal, () => {
+            if (cancelling) {
+                return;
+            }
+            cancelling = true;
+            void cancel(signal).then(exit, exit);
+        });
+    }
 }
 
 

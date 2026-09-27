@@ -29,6 +29,7 @@ Supported inputs
   - For mobile, this points to a downloadable file, ending in `.apk`, `.aab` or `.ipa`
 - [ ] metadata: Optional key-value pairs for custom metadata, one per line (e.g. `key: value`)
 - [ ] concurrency: Optional concurrency settings, with `group` and `on-conflict` (`cancel` or `wait`) on separate lines.
+- [ ] wait: Optional, defaults to `false`. When `true`, the step polls the run until it finishes and fails unless the run ended with no failures (snoozed failures are ignored). Bound the wait with the job's `timeout-minutes`. If the job is cancelled or times out while waiting, the action cancels the test run.
 - [ ] build-url: **Deprecated**, the build URL is sent to tests as the `BUILD_URL` environment variable — set it via `environment-variables` instead.
 
 ### With metadata
@@ -44,6 +45,18 @@ Supported inputs
     metadata: |
       version: 1.2.3
       pr_number: 42
+```
+
+### Wait for the run to finish
+
+```yml
+- name: Run tests
+  uses: empirical-run/dispatch-action@v1
+  timeout-minutes: 60
+  with:
+    auth-key: ${{ secrets.EMPIRICALRUN_KEY }}
+    environment: production
+    wait: true
 ```
 
 ### Vercel deployments
