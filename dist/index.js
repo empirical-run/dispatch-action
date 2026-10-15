@@ -29985,6 +29985,7 @@ var TestRunErrorCode = /* @__PURE__ */ ((TestRunErrorCode2) => {
   TestRunErrorCode2["AllShardError"] = "all_shard_error";
   TestRunErrorCode2["EmptySelection"] = "empty_selection";
   TestRunErrorCode2["RepoCheckoutFailed"] = "repo_checkout_failed";
+  TestRunErrorCode2["TeardownInterrupted"] = "teardown_interrupted";
   return TestRunErrorCode2;
 })(TestRunErrorCode || {});
 const TestRunErrorCodeDescriptions = {
@@ -30000,7 +30001,8 @@ const TestRunErrorCodeDescriptions = {
   ["empty_selection" /* EmptySelection */]: "The run's selection (tags or test case ids) matched no tests",
   ["invalid_job_context" /* InvalidJobContext */]: "Missing or invalid job configuration",
   ["all_shard_error" /* AllShardError */]: "All Shards Errored",
-  ["repo_checkout_failed" /* RepoCheckoutFailed */]: "Could not fetch the test repository"
+  ["repo_checkout_failed" /* RepoCheckoutFailed */]: "Could not fetch the test repository",
+  ["teardown_interrupted" /* TeardownInterrupted */]: "The worker was interrupted while running the setup teardown"
 };
 const TERMINAL_SHARD_STATES = /* @__PURE__ */ new Set([
   "ended",
