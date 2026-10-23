@@ -29986,6 +29986,7 @@ var TestRunErrorCode = /* @__PURE__ */ ((TestRunErrorCode2) => {
   TestRunErrorCode2["EmptySelection"] = "empty_selection";
   TestRunErrorCode2["RepoCheckoutFailed"] = "repo_checkout_failed";
   TestRunErrorCode2["TeardownInterrupted"] = "teardown_interrupted";
+  TestRunErrorCode2["UnsupportedConfig"] = "unsupported_config";
   return TestRunErrorCode2;
 })(TestRunErrorCode || {});
 const TestRunErrorCodeDescriptions = {
@@ -30002,7 +30003,8 @@ const TestRunErrorCodeDescriptions = {
   ["invalid_job_context" /* InvalidJobContext */]: "Missing or invalid job configuration",
   ["all_shard_error" /* AllShardError */]: "All Shards Errored",
   ["repo_checkout_failed" /* RepoCheckoutFailed */]: "Could not fetch the test repository",
-  ["teardown_interrupted" /* TeardownInterrupted */]: "The worker was interrupted while running the setup teardown"
+  ["teardown_interrupted" /* TeardownInterrupted */]: "The worker was interrupted while running the setup teardown",
+  ["unsupported_config" /* UnsupportedConfig */]: "The Playwright config uses globalSetup, globalTeardown or chained teardown projects, which setup-once does not support"
 };
 const TERMINAL_SHARD_STATES = /* @__PURE__ */ new Set([
   "ended",
