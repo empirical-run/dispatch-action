@@ -24511,14 +24511,33 @@ function getTrigger() {
 }
 
 // ../../packages/shared-types/dist/api/test-runs.mjs
-var TERMINAL_STATES = [
-  "cancelling",
-  "cancelled",
+var TestRunState = /* @__PURE__ */ ((TestRunState2) => {
+  TestRunState2["Pending"] = "pending";
+  TestRunState2["Queued"] = "queued";
+  TestRunState2["Cancelling"] = "cancelling";
+  TestRunState2["Cancelled"] = "cancelled";
+  TestRunState2["Ended"] = "ended";
+  TestRunState2["Started"] = "started";
+  TestRunState2["Finalizing"] = "finalizing";
+  TestRunState2["Error"] = "error";
+  TestRunState2["Interrupted"] = "interrupted";
+  return TestRunState2;
+})(TestRunState || {});
+var TEST_RUN_STATES = Object.values(TestRunState);
+var FINISHED_STATES = [
   "ended",
+  "cancelled",
   "error",
   "interrupted"
   /* Interrupted */
 ];
+var TERMINAL_STATES = [
+  "cancelling",
+  ...FINISHED_STATES
+];
+var NON_TERMINAL_STATES = TEST_RUN_STATES.filter(
+  (state) => !TERMINAL_STATES.includes(state)
+);
 
 // src/wait.ts
 var TERMINAL_STATES2 = new Set(TERMINAL_STATES);
